@@ -1,33 +1,74 @@
 package com.googlecode.gdxquake2.desktop;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.net.URL;
 import java.nio.ByteBuffer;
+import java.util.Enumeration;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
-import com.badlogic.gdx.graphics.Pixmap;
-import com.googlecode.gdxquake2.core.tools.AsyncFilesystem;
+import com.googlecode.gdxquake2.PlatformImage;
+import com.googlecode.gdxquake2.core.tools.AsyncBlobStorage;
+import com.googlecode.gdxquake2.core.tools.Callback;
+import com.googlecode.gdxquake2.core.tools.NamedBlob;
 import com.googlecode.gdxquake2.core.tools.Tools;
+
 
 public class JavaTools implements Tools {
 	
   JavaAsyncFilesystem fileSystem = new JavaAsyncFilesystem("data");
   
   @Override
-  public AsyncFilesystem getFileSystem() {
+  public AsyncBlobStorage getFileSystem() {
     return fileSystem;
   }
 
   @Override
-  public ByteBuffer convertToPng(Pixmap image) {
+  public PlatformImage createImage(int width, int height) {
+    return new DesktopImage(width, height);
+  }
 
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    try {
-      if (1 == 1) throw new IOException("ImageIO.write(javaImage.bufferedImage(), \"PNG\", baos);");
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-    byte[] data = baos.toByteArray();
-    return ByteBuffer.wrap(data);
+  @Override
+  public void unzip(final String url, final Callback<NamedBlob> dataCallback, final Callback<Void> readyCallback) {
+    Runnable runnable = new Runnable() {
+      public final void run() {
+        try {
+          InputStream is = new URL(url).openConnection().getInputStream();
+          File f = File.createTempFile("tmp", ".zip");
+          OutputStream os = new FileOutputStream(f);
+          byte[] buf = new byte[65536];
+          while (true) {
+            int count = is.read(buf);
+            if (count <= 0) {
+              break;
+            }
+            os.write(buf, 0, count);
+          }
+
+          ZipFile zipFile = new ZipFile(f);
+          Enumeration<? extends ZipEntry> entries = zipFile.entries();
+          while (entries.hasMoreElements()) {
+            ZipEntry zipEntry = entries.nextElement();
+            if (zipEntry == null) {
+              break;
+            }
+            byte[] data = new byte[(int) zipEntry.getSize()];
+            DataInputStream dis = new DataInputStream(zipFile.getInputStream(zipEntry));
+            dis.readFully(data);
+            dis.close();
+            dataCallback.onSuccess(new NamedBlob(zipEntry.getName(), ByteBuffer.wrap(data)));
+          }
+          zipFile = null;
+          f.delete();
+        } catch (IOException e) {
+          readyCallback.onFailure(e);
+          return;
+        }
+        readyCallback.onSuccess(null);
+      }
+    };
+    runnable.run();
+//        new Thread(runnable).start();
   }
 
   @Override

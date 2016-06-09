@@ -54,36 +54,32 @@ public class PakFile {
   }
   
 
-  public void unpack(final Tools tools, final Callback<Void> readyCallback) {
-    if (numpackfiles-- == 0) {
-      readyCallback.onSuccess(null);
-      return;
-    }
-    
-    byte[] tmpText = new byte[NAME_SIZE];
-    packhandle.get(tmpText);
+  public void unpack(final Tools tools, final Callback<NamedBlob> dataCallback, final Callback<Void> readyCallback) {
+    int savedLimit = packhandle.limit();
+    for (int i = 0; i < numpackfiles; i++){
+      byte[] tmpText = new byte[NAME_SIZE];
+      packhandle.get(tmpText);
 
-    int cut = 0;
-    while (cut < tmpText.length && tmpText[cut] > ' ') {
-      cut++;
-    }
-    
-    String name = new String(tmpText, 0, cut).toLowerCase();
-    tools.println("Unpacking " + name);
-
-    int filepos = packhandle.getInt();
-    int filelen = packhandle.getInt();
-
-    tools.getFileSystem().saveFile(name, packhandle, filepos, filelen, new Callback<Void>() {
-      @Override
-      public void onSuccess(Void result) {
-        unpack(tools, readyCallback);
+      int cut = 0;
+      while (cut < tmpText.length && tmpText[cut] > ' ') {
+        cut++;
       }
 
-      @Override
-      public void onFailure(Throwable cause) {
-        readyCallback.onFailure(cause);
-      }
-   });
+      String name = new String(tmpText, 0, cut).toLowerCase();
+
+      int filepos = packhandle.getInt();
+      int filelen = packhandle.getInt();
+
+      int savedPos = packhandle.position();
+
+      packhandle.position(filepos);
+      packhandle.limit(filelen + filepos);
+
+      dataCallback.onSuccess(new NamedBlob(name, packhandle.slice()));
+
+      packhandle.limit(savedLimit);
+      packhandle.position(savedPos);
+    }
+    readyCallback.onSuccess(null);
   }
 }

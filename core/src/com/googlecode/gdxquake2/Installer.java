@@ -8,27 +8,24 @@ import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.Pixmap;
 
-import com.googlecode.gdxquake2.core.tools.AsyncFilesystem;
-import com.googlecode.gdxquake2.core.tools.AsyncFilesystem.FileTask;
-import com.googlecode.gdxquake2.core.tools.Callback;
-import com.googlecode.gdxquake2.core.tools.ImageConverter;
-import com.googlecode.gdxquake2.core.tools.PCXConverter;
-import com.googlecode.gdxquake2.core.tools.PakFile;
-import com.googlecode.gdxquake2.core.tools.TGAConverter;
-import com.googlecode.gdxquake2.core.tools.Tools;
-import com.googlecode.gdxquake2.core.tools.WALConverter;
+import com.googlecode.gdxquake2.core.tools.*;
+import com.googlecode.gdxquake2.core.converter.ImageConverter;
+import com.googlecode.gdxquake2.core.converter.PCXConverter;
+import com.googlecode.gdxquake2.core.converter.TGAConverter;
+import com.googlecode.gdxquake2.core.converter.WALConverter;
 
 public class Installer {
   Preferences prefs;
   Tools tools;
-  AsyncFilesystem afs;
+  AsyncBlobStorage afs;
   Callback<Void> doneCallback;
   ImageConverter pcxConverter = new PCXConverter();
   ImageConverter tgaConverter = new TGAConverter();
   ImageConverter walConverter = new WALConverter();
-  StringBuilder imageSizes;
+  StringBuilder imageSizes = new StringBuilder();
+  boolean failed = false;
+  int pending = 0;
 
   public Installer(Tools tools, Preferences prefs, Callback<Void> doneCallback) {
     this.tools = tools;
@@ -45,139 +42,95 @@ public class Installer {
       e.printStackTrace();
     }
   }
-  
+
   void error(String msg, Throwable cause) {
+    failed = true;
     tools.println(msg);
     doneCallback.onFailure(cause);
   }
-  
+
+  Callback await() {
+    pending++;
+    return new Callback() {
+      @Override
+      public void onSuccess(Object result) {
+          pending--;
+          if (pending == 0 && !failed) {
+            doneCallback.onSuccess(null);
+          }
+      }
+
+      @Override
+      public void onFailure(Throwable cause) {
+        failed = true;
+        doneCallback.onFailure(cause);
+      }
+    };
+  }
+
+
   public void run() {
-    afs.getFile("/models/items/ammo/slugs/medium/tris.md2", 
-      new Callback<ByteBuffer>() {
-        @Override
-        public void onSuccess(ByteBuffer result) {
-          unpacked();
-        }
-
-        @Override
-        public void onFailure(Throwable cause) {
-          unpack();
-        }
-      }
-    );
+    tools.unzip("http://commondatastorage.googleapis.com/quake2demo/q2-314-demo-x86.exe",
+        new Callback<NamedBlob>() {
+           @Override
+           public void onSuccess(NamedBlob result) {
+             processFile(result.name, result.data);
+           }
+           @Override
+           public void onFailure(Throwable cause) {
+           }
+        },
+        await());
   }
 
 
-  void unpack() {
-    tools.println("Unpacking pak0.pak");
-    afs.getFile("Install/Data/baseq2/pak0.pak", new Callback<ByteBuffer>() {
-
-      @Override
-      public void onSuccess(ByteBuffer result) {
-        new PakFile(result).unpack(tools, 
-            new Callback<Void>() {
-
-              @Override
-              public void onSuccess(Void result) {
-                tools.println("pak0.pak successfully unpacked.");
-                // forcing convert here instead of calling unpacked
-                // because image sizes may stick in local storage
-                convert();
-              }
-
-              @Override
-              public void onFailure(Throwable cause) {
-                error("Error unpacking pak0.pak", cause);
-              }
-            });
-        }
-
-      @Override
-      public void onFailure(Throwable cause) {
-        error("Error accessing pak0.pak", cause);
-      }
-    });
-  }
-  
-  void unpacked() {
-    if (prefs.getString("imageSizes") != null) {
-      converted();
+  void processFile(String path, ByteBuffer data) {
+    path = path.toLowerCase();
+    if (path.endsWith(".pak")) {
+      tools.println("Unpacking: " + path);
+      unpack(data);
+    } else if (path.endsWith(".wav")) {
+      afs.saveFile(path, data, await());
     } else {
-      convert();
-    }
-  }
-
-
-  void convert() {
-    tools.println("Converting Images");
-    imageSizes = new StringBuilder();
-    afs.processFiles("", processor, new Callback<Void>() {
-      @Override
-      public void onSuccess(Void result) {
-        prefs.putString("imageSizes", imageSizes.toString());
-        converted();
-      }
-      @Override
-      public void onFailure(Throwable cause) {
-        error("Error processing files", cause);
-      }
-    });
-  }
-
-
-  void convert(final FileTask task, final ImageConverter converter) {
-    afs.getFile(task.fullPath, 
-        new Callback<ByteBuffer>() {
-          @Override
-          public void onSuccess(ByteBuffer result) {
-            Pixmap image = converter.convert(result);
-            imageSizes.append(task.fullPath + "," + image.getWidth() + "," + image.getHeight() + "\n");
-            ByteBuffer png = tools.convertToPng(image);
-            
-            String path = task.fullPath;
-            
-            afs.saveFile(path.toLowerCase() + ".png", png, 0, png.limit(), task.readyCallback);
-          }
-          @Override
-          public void onFailure(Throwable cause) {
-            task.readyCallback.onFailure(cause);
-          }
-    });
-  }
-  
-  final Callback<FileTask> processor = new Callback<FileTask>() {
-    @Override
-    public void onSuccess(FileTask result) {
       ImageConverter converter = null;
-      String lowerName = result.fullPath.toLowerCase();
-      if (lowerName.endsWith(".pcx")) {
+      if (path.endsWith(".pcx")) {
         converter = pcxConverter;
-      } else if (lowerName.endsWith(".tga")) {
+      } else if (path.endsWith(".tga")) {
         converter = tgaConverter;
-      } else if (lowerName.endsWith(".wal")) {
+      } else if (path.endsWith(".wal")) {
         converter = walConverter;
       } else {
-        tools.println("Skipping: " + result.fullPath);
-        result.readyCallback.onSuccess(null);
+        // tools.println("Skipping: " + path);
         return;
       }
-      tools.println("Converting: " + result.fullPath);
-      convert(result, converter);
+      tools.println("Converting: " + path);
+      convert(path, converter, data);
     }
-
-    @Override
-    public void onFailure(Throwable cause) {
-      tools.println("Error: " + cause);
-      cause.printStackTrace();
-    }
-  };
-  
-  
-  
-
-  void converted() {
-    tools.println("All files processed!");
-    tools.prparationsDone();
-    doneCallback.onSuccess(null);
   }
+
+
+  void unpack(ByteBuffer data) {
+    tools.println("Unpacking pak file");
+    new PakFile(data).unpack(tools,
+        new Callback<NamedBlob>() {
+          @Override
+          public void onSuccess(NamedBlob result) {
+            processFile(result.name, result.data);
+          }
+
+          @Override
+          public void onFailure(Throwable cause) {
+            error("Error unpacking pak file", cause);
+          }
+      }, await());
+  }
+
+
+  void convert(String path, final ImageConverter converter, ByteBuffer data) {
+    PlatformImage image = converter.convert(data);
+    imageSizes.append(path + "," + image.getWidth() + "," + image.getHeight() + "\n");
+    ByteBuffer png = image.toPng();
+    afs.saveFile(path + ".png", png, await());
+  }
+
 }

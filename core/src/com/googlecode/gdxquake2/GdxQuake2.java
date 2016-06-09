@@ -24,7 +24,7 @@ public class GdxQuake2 extends ApplicationAdapter {
 
 	public static Preferences prefs;
 
-	private static Tools tools;
+	public static Tools tools;
 	private static Map<String,Dimension> imageSizes = new HashMap<String,Dimension>();
 	private boolean initialized;
 	private double startTime;
@@ -106,8 +106,10 @@ public class GdxQuake2 extends ApplicationAdapter {
 		String all = prefs.getString("imageSizes");
 		for(String line: all.split("\n")) {
 			String[] parts = line.split(",");
-			if (parts.length > 0) {
+			if (parts.length > 2) {
 				imageSizes.put(parts[0], new Dimension(Integer.parseInt(parts[1]), Integer.parseInt(parts[2])));
+			} else {
+				System.out.println("Strange imageSizes line: '" + line + "'");
 			}
 		}
 

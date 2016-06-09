@@ -16,19 +16,20 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-package com.googlecode.gdxquake2.core.tools;
+package com.googlecode.gdxquake2.core.converter;
 
 
 import java.nio.ByteBuffer;
 
 import com.badlogic.gdx.graphics.Pixmap;
 
+import com.googlecode.gdxquake2.PlatformImage;
 import com.googlecode.gdxquake2.core.id.common.QuakeFiles;
 
 public class WALConverter extends ImageConverter {
 
   @Override
-  public Pixmap convert(ByteBuffer raw) {
+  public PlatformImage convert(ByteBuffer raw) {
 	// TODO Auto-generated method stub
     return makePalletizedImage(LoadWAL(raw));
   }

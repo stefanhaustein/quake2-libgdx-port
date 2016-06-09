@@ -16,12 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-package com.googlecode.gdxquake2.core.tools;
+package com.googlecode.gdxquake2.core.converter;
 
 import java.nio.ByteBuffer;
 
 import com.badlogic.gdx.graphics.Pixmap;
 
+import com.googlecode.gdxquake2.GdxQuake2;
+import com.googlecode.gdxquake2.PlatformImage;
 import com.googlecode.gdxquake2.core.id.common.QuakeImage;
 
 public abstract class ImageConverter {
@@ -42,31 +44,31 @@ public abstract class ImageConverter {
 //  }
 
 
-  public abstract Pixmap convert(ByteBuffer raw);
+  public abstract PlatformImage convert(ByteBuffer raw);
 
-  static Pixmap makeImage(image_t source) {
-	Pixmap image = new Pixmap(source.width, source.height, Pixmap.Format.RGBA8888);
+  static PlatformImage makeImage(image_t source) {
+	PlatformImage image = GdxQuake2.tools.createImage(source.width, source.height);
 	
-//	int[] rgba = new int[source.pix.length / 4];
-	//int ofs = 0;
+	int[] rgba = new int[source.pix.length / 4];
+	int ofs = 0;
 
-    ByteBuffer rgba = image.getPixels();
-	for (int ofs = 0; ofs < source.pix.length; ofs+=4) {
-	  rgba.putInt(((source.pix[ofs]&255) << 16) |
+    //ByteBuffer rgba = image.getPixels();
+	for (int i = 0; i < rgba.length; i++) {
+	  rgba[i] = (((source.pix[ofs]&255) << 16) |
 			    ((source.pix[ofs+1]&255) << 8) |
 			    (source.pix[ofs+2]&255) | 
 			    ((source.pix[ofs+3]&255) << 24));
 	  ofs += 4;
 	}
 	
-//	image.setRgb(0, 0, source.width, source.height, rgba, 0, source.width);
+	image.setArgb(0, 0, source.width, source.height, rgba, 0, source.width);
     return image;
   }
 
-  static Pixmap makePalletizedImage(image_t source) {
-    Pixmap image = new Pixmap(source.width, source.height, Pixmap.Format.RGBA8888);
+  static PlatformImage makePalletizedImage(image_t source) {
+    PlatformImage image = GdxQuake2.tools().createImage(source.width, source.height);
 
-    //int[] data = new int[source.width * source.height];
+    int[] data = new int[source.width * source.height];
     int i = 0;
     for (int y = 0; y < source.height; ++y) {
       for (int x = 0; x < source.width; ++x) {
@@ -74,12 +76,12 @@ public abstract class ImageConverter {
         if (ofs < 0) {
           ofs += 256;
         }
-        // data[i++] = (ofs == 255) ? 0 : QuakeImage.PALETTE_ARGB[ofs];
-        image.setColor((ofs == 255) ? 0 : QuakeImage.PALETTE_ARGB[ofs]);
+        data[i++] = (ofs == 255) ? 0 : QuakeImage.PALETTE_ARGB[ofs];
+        //image.setColor((ofs == 255) ? 0 : QuakeImage.PALETTE_ARGB[ofs]);
       }
     }
 
-    //image.setRgb(0, 0, source.width, source.height, data, 0, source.width);
+    image.setArgb(0, 0, source.width, source.height, data, 0, source.width);
     return image;
   }
 }

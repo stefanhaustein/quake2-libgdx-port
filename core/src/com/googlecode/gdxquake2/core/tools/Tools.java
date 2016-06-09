@@ -1,12 +1,14 @@
 package com.googlecode.gdxquake2.core.tools;
 
-import java.nio.ByteBuffer;
-
-import com.badlogic.gdx.graphics.Pixmap;
+import com.googlecode.gdxquake2.PlatformImage;
 
 public interface Tools {
-  AsyncFilesystem getFileSystem();
-  ByteBuffer convertToPng(Pixmap image);
+  AsyncBlobStorage getFileSystem();
+
+  PlatformImage createImage(int width, int height);
+
+  void unzip(final String url, Callback<NamedBlob> dataCallback, Callback<Void> readyCallback);
+
   void println(String text);
   float intBitsToFloat(int i);
   int floatToIntBits(float f);
