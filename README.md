@@ -1,4 +1,6 @@
-# quake2-playn-port
+# quake2-libgdx-port
+
+(currently just a plain fork of the playn port)
 
 Demo: http://quake2playn.appspot.com/ 
 
