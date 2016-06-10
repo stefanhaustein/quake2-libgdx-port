@@ -1,6 +1,6 @@
 # quake2-libgdx-port
 
-This is a fork of quake2-playn-port and still work in progres, *no platforms is fully working yet*.
+This is a fork of quake2-playn-port and still work in progres, **no platforms is fully working yet**.
 
 Status: 
 
