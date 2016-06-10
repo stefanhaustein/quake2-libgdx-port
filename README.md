@@ -1,8 +1,9 @@
 # quake2-libgdx-port
 
-(currently just a plain fork of the playn port)
+Status: Desktop file donwload, extraction and conversion seems to work.
 
-Demo: http://quake2playn.appspot.com/ 
+
+Demo (still playn code): http://quake2playn.appspot.com/ 
 
 - If you visit the demo with `https:`, you'll need to change the download link in the input field from `http:` to `https:`, too, as pointed out in issue #1. Ill fix this when I get a chance.
 
