@@ -7,16 +7,17 @@ import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import com.badlogic.gdx.Gdx;
 import com.googlecode.gdxquake2.PlatformImage;
 import com.googlecode.gdxquake2.core.tools.AsyncBlobStorage;
 import com.googlecode.gdxquake2.core.tools.Callback;
 import com.googlecode.gdxquake2.core.tools.NamedBlob;
-import com.googlecode.gdxquake2.core.tools.Tools;
+import com.googlecode.gdxquake2.core.tools.PlatformTools;
 
 
-public class JavaTools implements Tools {
+public class DesktopTools implements PlatformTools {
 	
-  JavaAsyncFilesystem fileSystem = new JavaAsyncFilesystem("data");
+  DesktopAsyncBlobStore fileSystem = new DesktopAsyncBlobStore("data");
   
   @Override
   public AsyncBlobStorage getFileSystem() {
@@ -67,7 +68,8 @@ public class JavaTools implements Tools {
         readyCallback.onSuccess(null);
       }
     };
-    runnable.run();
+    Gdx.app.postRunnable(runnable);
+//    runnable.run();
 //        new Thread(runnable).start();
   }
 

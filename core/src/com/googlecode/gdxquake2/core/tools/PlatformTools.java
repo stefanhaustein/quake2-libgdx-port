@@ -2,7 +2,7 @@ package com.googlecode.gdxquake2.core.tools;
 
 import com.googlecode.gdxquake2.PlatformImage;
 
-public interface Tools {
+public interface PlatformTools {
   AsyncBlobStorage getFileSystem();
 
   PlatformImage createImage(int width, int height);

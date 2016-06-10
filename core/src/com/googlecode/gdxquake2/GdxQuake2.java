@@ -15,7 +15,7 @@ import com.googlecode.gdxquake2.core.id.common.ResourceLoader;
 import com.googlecode.gdxquake2.core.id.render.GlRenderer;
 import com.googlecode.gdxquake2.core.id.sound.Sound;
 import com.googlecode.gdxquake2.core.tools.Callback;
-import com.googlecode.gdxquake2.core.tools.Tools;
+import com.googlecode.gdxquake2.core.tools.PlatformTools;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,12 +24,12 @@ public class GdxQuake2 extends ApplicationAdapter {
 
 	public static Preferences prefs;
 
-	public static Tools tools;
+	public static PlatformTools tools;
 	private static Map<String,Dimension> imageSizes = new HashMap<String,Dimension>();
 	private boolean initialized;
 	private double startTime;
 
-	public GdxQuake2(Tools tools) {
+	public GdxQuake2(PlatformTools tools) {
 		GdxQuake2.tools = tools;
 	}
 
@@ -57,7 +57,7 @@ public class GdxQuake2 extends ApplicationAdapter {
 	}
 
 
-	public static Tools tools() {
+	public static PlatformTools tools() {
 		return tools;
 	}
 

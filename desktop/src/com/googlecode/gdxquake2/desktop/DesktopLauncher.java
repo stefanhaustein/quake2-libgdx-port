@@ -7,6 +7,6 @@ import com.googlecode.gdxquake2.GdxQuake2;
 public class DesktopLauncher {
 	public static void main (String[] arg) {
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
-		new LwjglApplication(new GdxQuake2(new JavaTools()), config);
+		new LwjglApplication(new GdxQuake2(new DesktopTools()), config);
 	}
 }

@@ -17,7 +17,7 @@ import com.googlecode.gdxquake2.core.converter.WALConverter;
 
 public class Installer {
   Preferences prefs;
-  Tools tools;
+  PlatformTools tools;
   AsyncBlobStorage afs;
   Callback<Void> doneCallback;
   ImageConverter pcxConverter = new PCXConverter();
@@ -27,7 +27,7 @@ public class Installer {
   boolean failed = false;
   int pending = 0;
 
-  public Installer(Tools tools, Preferences prefs, Callback<Void> doneCallback) {
+  public Installer(PlatformTools tools, Preferences prefs, Callback<Void> doneCallback) {
     this.tools = tools;
     this.prefs = prefs;
     this.afs = tools.getFileSystem();

@@ -54,7 +54,7 @@ public class PakFile {
   }
   
 
-  public void unpack(final Tools tools, final Callback<NamedBlob> dataCallback, final Callback<Void> readyCallback) {
+  public void unpack(final PlatformTools tools, final Callback<NamedBlob> dataCallback, final Callback<Void> readyCallback) {
     int savedLimit = packhandle.limit();
     for (int i = 0; i < numpackfiles; i++){
       byte[] tmpText = new byte[NAME_SIZE];

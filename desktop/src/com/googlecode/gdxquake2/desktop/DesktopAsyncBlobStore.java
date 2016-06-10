@@ -11,31 +11,36 @@ import java.nio.ByteOrder;
 import javax.swing.*;
 
 
+import com.badlogic.gdx.Gdx;
 import com.googlecode.gdxquake2.core.tools.AsyncBlobStorage;
 import com.googlecode.gdxquake2.core.tools.Callback;
 
-public class JavaAsyncFilesystem implements AsyncBlobStorage {
-
-  
+public class DesktopAsyncBlobStore implements AsyncBlobStorage {
   File root;
-  public JavaAsyncFilesystem(String rootPath) {
+  public DesktopAsyncBlobStore(String rootPath) {
     this.root = new File(rootPath);
   }
   
   @Override
-  public void getFile(String filename, Callback<ByteBuffer> callback) {
-    File file = new File(root, filename);
-    byte[] data = new byte[(int) file.length()];
-    try {
-      System.out.println("file: " + file + " size: " + file.length());
-      
-      new DataInputStream(new FileInputStream(file)).readFully(data);
-      ByteBuffer buf = ByteBuffer.wrap(data);
-      buf.order(ByteOrder.LITTLE_ENDIAN);
-      callback.onSuccess(buf);
-    }catch (IOException e) {
-      callback.onFailure(e);
-    }
+  public void getFile(String filename, final Callback<ByteBuffer> callback) {
+    final File file = new File(root, filename);
+    Runnable runnable = new Runnable() {
+      public void run() {
+        byte[] data = new byte[(int) file.length()];
+        try {
+          System.out.println("file: " + file + " size: " + file.length());
+
+          new DataInputStream(new FileInputStream(file)).readFully(data);
+          ByteBuffer buf = ByteBuffer.wrap(data);
+          buf.order(ByteOrder.LITTLE_ENDIAN);
+          callback.onSuccess(buf);
+
+        } catch (IOException e) {
+          callback.onFailure(e);
+        }
+      }
+    };
+    Gdx.app.postRunnable(runnable);
   }
 
 
@@ -51,7 +56,7 @@ public class JavaAsyncFilesystem implements AsyncBlobStorage {
     data.position(pos);
     file.getParentFile().mkdirs();
 
-    SwingUtilities.invokeLater(new Runnable() {
+    Runnable runnable = new Runnable() {
       @Override
       public void run() {
         try {
@@ -63,7 +68,8 @@ public class JavaAsyncFilesystem implements AsyncBlobStorage {
           callback.onFailure(e);
         }
       }
-    });
+    };
+    Gdx.app.postRunnable(runnable);
   }
 
 }
