@@ -736,6 +736,12 @@ public final class GL11Emulation implements GL11 {
   }
 
   @Override
+  public int glGenTexture() {
+    return gl.glGenTexture();
+  }
+
+
+  @Override
   public void glGetIntegerv(int pname, int[] params, int offset) {
     
     switch(pname) {

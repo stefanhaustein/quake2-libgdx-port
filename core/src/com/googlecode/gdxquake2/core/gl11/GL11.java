@@ -507,6 +507,8 @@ public interface GL11 {
 
   public void glGenTextures(int n, int[] textures, int offset);
 
+  public int glGenTexture();
+
   public void glGetIntegerv(int pname, int[] params, int offset);
 
   public void glLightModelf(int pname, float param);

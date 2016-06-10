@@ -56,6 +56,7 @@ public class Installer {
       public void onSuccess(Object result) {
           pending--;
           if (pending == 0 && !failed) {
+            prefs.putString("imageSizes", imageSizes.toString());
             doneCallback.onSuccess(null);
           }
       }
@@ -88,7 +89,7 @@ public class Installer {
     path = path.toLowerCase();
     if (path.endsWith(".pak")) {
       tools.println("Unpacking: " + path);
-      unpack(data);
+      unpack(path, data);
     } else if (path.endsWith(".wav")) {
       afs.saveFile(path, data, await());
     } else {
@@ -109,13 +110,15 @@ public class Installer {
   }
 
 
-  void unpack(ByteBuffer data) {
+  void unpack(String path, ByteBuffer data) {
     tools.println("Unpacking pak file");
+    final String prefix = path.substring(0, path.lastIndexOf("/") + 1);
+
     new PakFile(data).unpack(tools,
         new Callback<NamedBlob>() {
           @Override
           public void onSuccess(NamedBlob result) {
-            processFile(result.name, result.data);
+            processFile(prefix + result.name, result.data);
           }
 
           @Override

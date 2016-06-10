@@ -816,7 +816,7 @@ public class GlRenderer implements Renderer {
     for (int i = pendingImages.size() - 1; i >= 0; i--) {
       Image image = pendingImages.get(i);
       System.out.println("if (image.playNImage.isReady()) {");
-      if (false) {
+      if (true) {
         GdxQuake2.tools().println("Image ready: " + image);
         uploadImage(image);
         pendingImages.remove(i);
@@ -919,7 +919,7 @@ public class GlRenderer implements Renderer {
 //    String normalizedName = cut == -1 ? name : name.substring(0, cut);
     Dimension d = GdxQuake2.getImageSize(name);
     if (d == null) {
-      name = "Install/Data/baseq2/" + name;
+      name = "install/data/baseq2/" + name;
     }
     d = GdxQuake2.getImageSize(name);
     if (d == null) {
@@ -935,7 +935,7 @@ public class GlRenderer implements Renderer {
     System.out.println("image.playNImage = GdxQuake2.tools().getFileSystem().getImage(name.toLowerCase() + \".png\");");
 
     image.playNImage = new Pixmap(image.width, image.height, Pixmap.Format.RGBA8888);
-    image.playNImage.setColor((int) (Math.random() * 0x0ffffffff));
+    image.playNImage.setColor((int) (0x88888888));
     image.playNImage.fill();
 
     pendingImages.add(image);

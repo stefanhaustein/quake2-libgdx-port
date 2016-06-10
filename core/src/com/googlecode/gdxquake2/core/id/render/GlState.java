@@ -133,8 +133,7 @@ public class GlState
   }
 
   public static int generateTexture() {
-    gl.glGenTextures(1, returnValueArray, 0);
-    return returnValueArray[0];
+    return gl.glGenTexture();
   }
 
 }

@@ -36,20 +36,27 @@ public class GdxQuake2 extends ApplicationAdapter {
 	@Override
 	public void create () {
 		prefs = Gdx.app.getPreferences("default");
-		Installer installer = new Installer(tools, prefs, new Callback<Void>() {
-			@Override
-			public void onSuccess(Void result) {
-				tools.println("All files successfully installed and converted");
-				initGame();
-			}
 
-			@Override
-			public void onFailure(Throwable cause) {
-				error("Error installing files", cause);
-			}
+		if (!prefs.getBoolean("downloaded", false)) {
+			Installer installer = new Installer(tools, prefs, new Callback<Void>() {
+				@Override
+				public void onSuccess(Void result) {
+					tools.println("All files successfully installed and converted");
+					prefs.putBoolean("downloaded", true);
+					prefs.flush();
+					initGame();
+				}
 
-		});
-		installer.run();
+				@Override
+				public void onFailure(Throwable cause) {
+					error("Error installing files", cause);
+				}
+
+			});
+			installer.run();
+		} else {
+			initGame();
+		}
 	}
 
 	void error(String msg, Throwable cause) {
@@ -65,8 +72,8 @@ public class GdxQuake2 extends ApplicationAdapter {
 
 
 	public static Dimension getImageSize(String name) {
-		if (!name.startsWith("/")) {
-			name = "/" + name;
+		if (name.startsWith("/")) {
+			name = name.substring(1);
 		}
 		return imageSizes.get(name);
 	}
@@ -79,6 +86,9 @@ public class GdxQuake2 extends ApplicationAdapter {
 		System.out.println("Installation succeeded!");
 
 		loadImageSizes();
+
+		System.out.println("Imagesizes: " + imageSizes);
+
 		Globals.autojoin.value = 0;
 		Globals.re = new GlRenderer(
 				new GL11Emulation(Gdx.gl20),
@@ -108,12 +118,8 @@ public class GdxQuake2 extends ApplicationAdapter {
 			String[] parts = line.split(",");
 			if (parts.length > 2) {
 				imageSizes.put(parts[0], new Dimension(Integer.parseInt(parts[1]), Integer.parseInt(parts[2])));
-			} else {
-				System.out.println("Strange imageSizes line: '" + line + "'");
 			}
 		}
-
-		System.out.println("" + imageSizes);
 	}
 
 
