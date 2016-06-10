@@ -1,6 +1,10 @@
 # quake2-libgdx-port
 
-Status: Desktop file donwload, extraction and conversion seems to work.
+This is work in progres, *no platforms is fully working yet*.
+
+Status: 
+
+ - 2016-06-10: Desktop file donwload, extraction and conversion seems to work.
 
 
 Demo (still playn code): http://quake2playn.appspot.com/ 
