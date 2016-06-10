@@ -7,9 +7,9 @@ Status:
  - 2016-06-10: Desktop file donwload, extraction and conversion seems to work.
 
 
-Demo of the playn version: http://quake2playn.appspot.com/ 
+Demo of the old playn version: http://quake2playn.appspot.com/ 
 
 - If you visit the demo with `https:`, you'll need to change the download link in the input field from `http:` to `https:`, too, as pointed out in issue #1. Ill fix this when I get a chance.
 
-Our original April 1st 2010 Video: https://www.youtube.com/watch?v=XhMN0wlITLk
+Our original April 1st 2010 Video of the GWT port: https://www.youtube.com/watch?v=XhMN0wlITLk
 
