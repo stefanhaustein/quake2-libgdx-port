@@ -20,8 +20,7 @@ package com.googlecode.gdxquake2.core.converter;
 
 import java.nio.ByteBuffer;
 
-import com.googlecode.gdxquake2.GdxQuake2;
-import com.googlecode.gdxquake2.PlatformImage;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.googlecode.gdxquake2.core.id.common.QuakeImage;
 
 public abstract class ImageConverter {
@@ -42,44 +41,37 @@ public abstract class ImageConverter {
 //  }
 
 
-  public abstract PlatformImage convert(ByteBuffer raw);
+  public abstract Pixmap convert(ByteBuffer raw);
 
-  static PlatformImage makeImage(image_t source) {
-	PlatformImage image = GdxQuake2.tools.createImage(source.width, source.height);
-	
-	int[] rgba = new int[source.pix.length / 4];
+  static Pixmap makeImage(image_t source) {
+	Pixmap image = new Pixmap(source.width, source.height, Pixmap.Format.RGBA8888);
 	int ofs = 0;
-
-    //ByteBuffer rgba = image.getPixels();
-	for (int i = 0; i < rgba.length; i++) {
-	  rgba[i] = (((source.pix[ofs]&255) << 16) |
-			    ((source.pix[ofs+1]&255) << 8) |
-			    (source.pix[ofs+2]&255) | 
-			    ((source.pix[ofs+3]&255) << 24));
-	  ofs += 4;
+	for (int y = 0; y < source.height; y++) {
+      for (int x = 0; x < source.width; x++) {
+          int rgba = (((source.pix[ofs] & 255) << 24) |
+                  ((source.pix[ofs + 1] & 255) << 16) |
+                  ((source.pix[ofs + 2] & 255) << 8)|
+                  ((source.pix[ofs + 3] & 255)));
+          ofs += 4;
+          image.drawPixel(x, y, rgba);
+      }
 	}
-	
-	image.setArgb(0, 0, source.width, source.height, rgba, 0, source.width);
+
     return image;
   }
 
-  static PlatformImage makePalletizedImage(image_t source) {
-    PlatformImage image = GdxQuake2.tools().createImage(source.width, source.height);
-
-    int[] data = new int[source.width * source.height];
-    int i = 0;
+  static Pixmap makePalletizedImage(image_t source) {
+    Pixmap image = new Pixmap(source.width, source.height, Pixmap.Format.RGBA8888);
     for (int y = 0; y < source.height; ++y) {
       for (int x = 0; x < source.width; ++x) {
         int ofs = source.pix[y * source.width + x];
         if (ofs < 0) {
           ofs += 256;
         }
-        data[i++] = (ofs == 255) ? 0 : QuakeImage.PALETTE_ARGB[ofs];
-        //image.setColor((ofs == 255) ? 0 : QuakeImage.PALETTE_ARGB[ofs]);
+        int rgba = (ofs == 255) ? 0 : QuakeImage.PALETTE_RGBA[ofs];
+        image.drawPixel(x, y, rgba);
       }
     }
-
-    image.setArgb(0, 0, source.width, source.height, data, 0, source.width);
     return image;
   }
 }

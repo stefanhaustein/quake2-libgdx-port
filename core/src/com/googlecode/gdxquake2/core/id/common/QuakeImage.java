@@ -90,7 +90,7 @@ public class QuakeImage {
 		0xff1b3f7b, 0xffc7d3eb, 0xff9babc7, 0xff778ba7, 0xff576b87, 0xff535b9f,
 	/*0x00ffffff*/ };
 
-	public static final int[] PALETTE_ARGB = new int[PALETTE_ABGR.length];
+	public static final int[] PALETTE_RGBA = new int[PALETTE_ABGR.length];
 	
 	public static final int ALPHA_MASK = 0x0ff000000;
 
@@ -104,14 +104,14 @@ public class QuakeImage {
 	}
 	
 	static {
-		int len = PALETTE_ARGB.length;
+		int len = PALETTE_RGBA.length;
 		for (int i = 0; i < len; i++) {
 	      int abgr = QuakeImage.PALETTE_ABGR[i];
 	      int alpha = (abgr >> 24) & 255;
 	      int blue = gamma((abgr >> 16) & 255);
 	      int green = gamma((abgr >> 8) & 255);
 	      int red = gamma(abgr & 255);
-	      PALETTE_ARGB[i] = (alpha << 24) | (red << 16) | (green << 8) | blue;
+	      PALETTE_RGBA[i] = (red << 24) | (green << 16) | (blue << 8) | alpha;
 	    }
 	}
 	

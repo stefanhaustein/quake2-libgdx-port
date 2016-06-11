@@ -6,9 +6,9 @@ import java.nio.ByteBuffer;
 
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.files.FileHandle;
 
+import com.badlogic.gdx.graphics.Pixmap;
 import com.googlecode.gdxquake2.core.tools.*;
 import com.googlecode.gdxquake2.core.converter.ImageConverter;
 import com.googlecode.gdxquake2.core.converter.PCXConverter;
@@ -16,21 +16,14 @@ import com.googlecode.gdxquake2.core.converter.TGAConverter;
 import com.googlecode.gdxquake2.core.converter.WALConverter;
 
 public class Installer {
-  Preferences prefs;
-  PlatformTools tools;
-  AsyncBlobStorage afs;
   Callback<Void> doneCallback;
   ImageConverter pcxConverter = new PCXConverter();
   ImageConverter tgaConverter = new TGAConverter();
   ImageConverter walConverter = new WALConverter();
-  StringBuilder imageSizes = new StringBuilder();
   boolean failed = false;
   int pending = 0;
 
-  public Installer(PlatformTools tools, Preferences prefs, Callback<Void> doneCallback) {
-    this.tools = tools;
-    this.prefs = prefs;
-    this.afs = tools.getFileSystem();
+  public Installer(Callback<Void> doneCallback) {
     this.doneCallback = doneCallback;
 
     try {
@@ -45,7 +38,7 @@ public class Installer {
 
   void error(String msg, Throwable cause) {
     failed = true;
-    tools.println(msg);
+    GdxQuake2.tools.println(msg);
     doneCallback.onFailure(cause);
   }
 
@@ -56,7 +49,7 @@ public class Installer {
       public void onSuccess(Object result) {
           pending--;
           if (pending == 0 && !failed) {
-            prefs.putString("imageSizes", imageSizes.toString());
+            GdxQuake2.imageSizes.flush();
             doneCallback.onSuccess(null);
           }
       }
@@ -71,7 +64,7 @@ public class Installer {
 
 
   public void run() {
-    tools.unzip("http://commondatastorage.googleapis.com/quake2demo/q2-314-demo-x86.exe",
+    GdxQuake2.tools.unzip("http://commondatastorage.googleapis.com/quake2demo/q2-314-demo-x86.exe",
         new Callback<NamedBlob>() {
            @Override
            public void onSuccess(NamedBlob result) {
@@ -88,10 +81,10 @@ public class Installer {
   void processFile(String path, ByteBuffer data) {
     path = path.toLowerCase();
     if (path.endsWith(".pak")) {
-      tools.println("Unpacking: " + path);
+      GdxQuake2.tools.println("Unpacking: " + path);
       unpack(path, data);
     } else if (path.endsWith(".wav")) {
-      afs.saveFile(path, data, await());
+      GdxQuake2.tools().asyncBlobStorage().saveFile(path, data, await());
     } else {
       ImageConverter converter = null;
       if (path.endsWith(".pcx")) {
@@ -104,17 +97,17 @@ public class Installer {
         // tools.println("Skipping: " + path);
         return;
       }
-      tools.println("Converting: " + path);
+      GdxQuake2.tools.println("Converting: " + path);
       convert(path, converter, data);
     }
   }
 
 
   void unpack(String path, ByteBuffer data) {
-    tools.println("Unpacking pak file");
+    GdxQuake2.tools.println("Unpacking pak file");
     final String prefix = path.substring(0, path.lastIndexOf("/") + 1);
 
-    new PakFile(data).unpack(tools,
+    new PakFile(data).unpack(GdxQuake2.tools,
         new Callback<NamedBlob>() {
           @Override
           public void onSuccess(NamedBlob result) {
@@ -130,10 +123,10 @@ public class Installer {
 
 
   void convert(String path, final ImageConverter converter, ByteBuffer data) {
-    PlatformImage image = converter.convert(data);
-    imageSizes.append(path + "," + image.getWidth() + "," + image.getHeight() + "\n");
-    ByteBuffer png = image.toPng();
-    afs.saveFile(path + ".png", png, await());
+    Pixmap image = converter.convert(data);
+    GdxQuake2.imageSizes.putInteger(path, image.getWidth() * 10000 + image.getHeight());
+    ByteBuffer png = GdxQuake2.tools.encodePng(image);
+    GdxQuake2.tools().asyncBlobStorage().saveFile(path + ".png", png, await());
   }
 
 }

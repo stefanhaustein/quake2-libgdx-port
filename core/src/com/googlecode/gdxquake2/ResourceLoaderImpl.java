@@ -19,11 +19,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 package com.googlecode.gdxquake2;
 
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 
-import com.googlecode.gdxquake2.GdxQuake2;
 import com.googlecode.gdxquake2.core.id.common.ResourceLoader;
 import com.googlecode.gdxquake2.core.tools.Callback;
 
@@ -44,7 +42,7 @@ public class ResourceLoaderImpl implements ResourceLoader.Impl {
     final String path = rawPath.toLowerCase();
     System.out.println("Requesting resource: " + path);
     
-    GdxQuake2.tools().getFileSystem().getFile(path, new Callback<ByteBuffer>() {
+    GdxQuake2.tools().asyncBlobStorage().getFile(path, new Callback<ByteBuffer>() {
 
       @Override
       public void onSuccess(ByteBuffer result) {

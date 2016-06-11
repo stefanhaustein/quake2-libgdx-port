@@ -17,15 +17,13 @@ import com.googlecode.gdxquake2.core.id.sound.Sound;
 import com.googlecode.gdxquake2.core.tools.Callback;
 import com.googlecode.gdxquake2.core.tools.PlatformTools;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class GdxQuake2 extends ApplicationAdapter {
 
-	public static Preferences prefs;
+	public static final String DOWNLOAD_COMPLETE = "downloadComplete";
 
+	public static Preferences imageSizes;
+	public static Preferences state;
 	public static PlatformTools tools;
-	private static Map<String,Dimension> imageSizes = new HashMap<String,Dimension>();
 	private boolean initialized;
 	private double startTime;
 
@@ -35,15 +33,18 @@ public class GdxQuake2 extends ApplicationAdapter {
 
 	@Override
 	public void create () {
-		prefs = Gdx.app.getPreferences("default");
+		imageSizes = Gdx.app.getPreferences("imageSizes");
+		state = Gdx.app.getPreferences("state");
 
-		if (!prefs.getBoolean("downloaded", false)) {
-			Installer installer = new Installer(tools, prefs, new Callback<Void>() {
+		if (state.getBoolean(DOWNLOAD_COMPLETE, false)) {
+			initGame();
+		} else {
+			Installer installer = new Installer(new Callback<Void>() {
 				@Override
 				public void onSuccess(Void result) {
 					tools.println("All files successfully installed and converted");
-					prefs.putBoolean("downloaded", true);
-					prefs.flush();
+					state.putBoolean(DOWNLOAD_COMPLETE, true);
+					state.flush();
 					initGame();
 				}
 
@@ -54,8 +55,6 @@ public class GdxQuake2 extends ApplicationAdapter {
 
 			});
 			installer.run();
-		} else {
-			initGame();
 		}
 	}
 
@@ -75,7 +74,8 @@ public class GdxQuake2 extends ApplicationAdapter {
 		if (name.startsWith("/")) {
 			name = name.substring(1);
 		}
-		return imageSizes.get(name);
+		int size = imageSizes.getInteger(name, -1);
+		return size == -1 ? null : new Dimension(size / 10000, size % 10000);
 	}
 
 
@@ -84,10 +84,6 @@ public class GdxQuake2 extends ApplicationAdapter {
 	 */
 	void initGame() {
 		System.out.println("Installation succeeded!");
-
-		loadImageSizes();
-
-		System.out.println("Imagesizes: " + imageSizes);
 
 		Globals.autojoin.value = 0;
 		Globals.re = new GlRenderer(
@@ -110,16 +106,6 @@ public class GdxQuake2 extends ApplicationAdapter {
 		startTime = TimeUtils.millis();
 
 		initialized = true;
-	}
-
-	void loadImageSizes() {
-		String all = prefs.getString("imageSizes");
-		for(String line: all.split("\n")) {
-			String[] parts = line.split(",");
-			if (parts.length > 2) {
-				imageSizes.put(parts[0], new Dimension(Integer.parseInt(parts[1]), Integer.parseInt(parts[2])));
-			}
-		}
 	}
 
 

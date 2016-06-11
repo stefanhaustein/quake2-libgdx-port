@@ -33,7 +33,6 @@ import java.util.Map;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.googlecode.gdxquake2.GdxQuake2;
-import com.googlecode.gdxquake2.PlatformImage;
 import com.googlecode.gdxquake2.core.gl11.GL11;
 import com.googlecode.gdxquake2.core.gl11.GLDebug;
 import com.googlecode.gdxquake2.core.gl11.MeshBuilder;
@@ -942,21 +941,14 @@ public class GlRenderer implements Renderer {
     pendingImages.add(image);
     image.ready = false;
 
-    GdxQuake2.tools().getFileSystem().getFile(name.toLowerCase() + ".png", new Callback<ByteBuffer>() {
+    GdxQuake2.tools().asyncBlobStorage().getFile(name.toLowerCase() + ".png", new Callback<ByteBuffer>() {
       @Override
       public void onSuccess(ByteBuffer result) {
         // Image was recycled in the meantime.
         if (image.loadId != loadId) {
           return;
         }
-        PlatformImage png = GdxQuake2.tools().decodePng(result);
-        for (int y = 0; y < png.getHeight(); y++) {
-          for (int x = 0; x < png.getWidth(); x++) {
-            int argb = png.getArgb(x, y);
-            int rgba = (argb << 8) | ((argb >>> 24) & 255);
-            image.pixmap.drawPixel(x, y, rgba);
-          }
-        }
+        image.pixmap = GdxQuake2.tools.decodePng(result);
         image.ready = true;
       }
 

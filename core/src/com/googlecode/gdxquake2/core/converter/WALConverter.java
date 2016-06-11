@@ -23,13 +23,12 @@ import java.nio.ByteBuffer;
 
 import com.badlogic.gdx.graphics.Pixmap;
 
-import com.googlecode.gdxquake2.PlatformImage;
 import com.googlecode.gdxquake2.core.id.common.QuakeFiles;
 
 public class WALConverter extends ImageConverter {
 
   @Override
-  public PlatformImage convert(ByteBuffer raw) {
+  public Pixmap convert(ByteBuffer raw) {
 	// TODO Auto-generated method stub
     return makePalletizedImage(LoadWAL(raw));
   }

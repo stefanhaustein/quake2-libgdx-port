@@ -94,7 +94,7 @@ public class PlayNALAdapter extends ALAdapter {
     BufferData(String location) {
       this.location = location;
       sound = null;
-      System.out.println("GdxQuake2.tools().getFileSystem().getSound(location.toLowerCase());");
+      System.out.println("GdxQuake2.tools().asyncBlobStorage().getSound(location.toLowerCase());");
     }
   }
 

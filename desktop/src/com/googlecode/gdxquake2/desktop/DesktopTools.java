@@ -9,7 +9,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import com.badlogic.gdx.Gdx;
-import com.googlecode.gdxquake2.PlatformImage;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.googlecode.gdxquake2.core.tools.AsyncBlobStorage;
 import com.googlecode.gdxquake2.core.tools.Callback;
 import com.googlecode.gdxquake2.core.tools.NamedBlob;
@@ -23,25 +23,53 @@ public class DesktopTools implements PlatformTools {
   DesktopAsyncBlobStore fileSystem = new DesktopAsyncBlobStore("data");
   
   @Override
-  public AsyncBlobStorage getFileSystem() {
+  public AsyncBlobStorage asyncBlobStorage() {
     return fileSystem;
   }
 
   @Override
-  public PlatformImage createImage(int width, int height) {
-    return new DesktopImage(width, height);
+  public Pixmap decodePng(final ByteBuffer data) {
+    try {
+      InputStream is = new InputStream() {
+        int pos = 0;
+        @Override
+        public int read() throws IOException {
+          return pos == data.limit() ? -1 : (data.get(pos++) & 255);
+        }
+      };
+      BufferedImage bufferedImage = ImageIO.read(is);
+      int w = bufferedImage.getWidth();
+      int h = bufferedImage.getHeight();
+      Pixmap pixmap = new Pixmap(w, h, Pixmap.Format.RGBA8888);
+      for (int y = 0; y < h; y++) {
+        for (int x = 0; x < w; x++) {
+          int argb = bufferedImage.getRGB(x, y);
+          int rgba = (argb << 8) | (argb >>> 24);
+          pixmap.drawPixel(x, y, rgba);
+        }
+      }
+      return pixmap;
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Override
-  public PlatformImage decodePng(final ByteBuffer data) {
+  public ByteBuffer encodePng(Pixmap pixmap) {
+    int w = pixmap.getWidth();
+    int h = pixmap.getHeight();
+    BufferedImage bufferedImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+    for (int y = 0; y < h; y++) {
+      for (int x = 0; x < w; x++) {
+        int rgba = pixmap.getPixel(x, y);
+        int argb = (rgba >>> 8) | (rgba << 24);
+        bufferedImage.setRGB(x, y, argb);
+      }
+    }
     try {
-      InputStream is = new InputStream() {
-        @Override
-        public int read() throws IOException {
-          return data.position() == data.limit() ? -1 : (data.get() & 255);
-        }
-      };
-      return new DesktopImage(ImageIO.read(is));
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      ImageIO.write(bufferedImage, "PNG", baos);
+      return ByteBuffer.wrap(baos.toByteArray());
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -87,8 +115,6 @@ public class DesktopTools implements PlatformTools {
       }
     };
     Gdx.app.postRunnable(runnable);
-//    runnable.run();
-//        new Thread(runnable).start();
   }
 
   @Override
@@ -110,13 +136,4 @@ public class DesktopTools implements PlatformTools {
   public void exit(int i) {
     System.exit(i);
   }
-
-  @Override
-  public void prparationsDone() {
-    // TODO Auto-generated method stub
-    
-  }
-
-
-
 }

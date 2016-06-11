@@ -1,21 +1,20 @@
 package com.googlecode.gdxquake2.core.tools;
 
-import com.googlecode.gdxquake2.PlatformImage;
+import com.badlogic.gdx.graphics.Pixmap;
 
 import java.nio.ByteBuffer;
 
 public interface PlatformTools {
-  AsyncBlobStorage getFileSystem();
+  AsyncBlobStorage asyncBlobStorage();
 
-  PlatformImage createImage(int width, int height);
-  PlatformImage decodePng(ByteBuffer result);
+  Pixmap decodePng(ByteBuffer result);
+  ByteBuffer encodePng(Pixmap pixmap);
 
   void unzip(final String url, Callback<NamedBlob> dataCallback, Callback<Void> readyCallback);
 
   void println(String text);
   float intBitsToFloat(int i);
   int floatToIntBits(float f);
-  void prparationsDone();
   void exit(int i);
 
 }
