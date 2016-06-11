@@ -10,4 +10,6 @@ public interface PlatformImage {
 
     int getWidth();
     int getHeight();
+
+    int getArgb(int x, int y);
 }

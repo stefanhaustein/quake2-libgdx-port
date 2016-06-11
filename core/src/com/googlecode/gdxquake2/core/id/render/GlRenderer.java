@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 package com.googlecode.gdxquake2.core.id.render;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +33,7 @@ import java.util.Map;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.googlecode.gdxquake2.GdxQuake2;
+import com.googlecode.gdxquake2.PlatformImage;
 import com.googlecode.gdxquake2.core.gl11.GL11;
 import com.googlecode.gdxquake2.core.gl11.GLDebug;
 import com.googlecode.gdxquake2.core.gl11.MeshBuilder;
@@ -51,6 +53,7 @@ import com.googlecode.gdxquake2.core.id.game.ConsoleVariable;
 import com.googlecode.gdxquake2.core.id.sys.KBD;
 import com.googlecode.gdxquake2.core.id.util.Lib;
 import com.googlecode.gdxquake2.core.id.util.Vargs;
+import com.googlecode.gdxquake2.core.tools.Callback;
 
 /**
  * LWJGLRenderer
@@ -815,8 +818,7 @@ public class GlRenderer implements Renderer {
   public void checkPendingImages() {
     for (int i = pendingImages.size() - 1; i >= 0; i--) {
       Image image = pendingImages.get(i);
-      System.out.println("if (image.playNImage.isReady()) {");
-      if (true) {
+      if (image.ready) {
         GdxQuake2.tools().println("Image ready: " + image);
         uploadImage(image);
         pendingImages.remove(i);
@@ -857,7 +859,7 @@ public class GlRenderer implements Renderer {
       GlState.gl.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_CLAMP_TO_EDGE);
       GlState.gl.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
       GlState.gl.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
-      texImage2D(image.playNImage,  GL20.GL_TEXTURE_2D, 0, GL20.GL_RGBA, GL20.GL_RGBA, GL20.GL_UNSIGNED_BYTE);
+      texImage2D(image.pixmap,  GL20.GL_TEXTURE_2D, 0, GL20.GL_RGBA, GL20.GL_RGBA, GL20.GL_UNSIGNED_BYTE);
       image.upload_width = image.width;
       image.upload_height = image.height;
     } else if (image.type == com.googlecode.gdxquake2.core.id.common.QuakeImage.it_sky) {
@@ -873,7 +875,7 @@ public class GlRenderer implements Renderer {
         Images.skyTarget.upload_width = 6 * image.width;
       }
       Images.skyTarget.upload_height = image.height;
-      texSubImage2D(image.playNImage,  GL20.GL_TEXTURE_2D, 0, image.width * image.skyIndex, 0, GL20.GL_RGBA, GL20.GL_UNSIGNED_BYTE);
+      texSubImage2D(image.pixmap,  GL20.GL_TEXTURE_2D, 0, image.width * image.skyIndex, 0, GL20.GL_RGBA, GL20.GL_UNSIGNED_BYTE);
     } else {
       GdxQuake2.tools().println("upload mipmap image " + image.name + ":" + image.width + "x" + image.height);
       GlState.gl.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_REPEAT);
@@ -887,11 +889,11 @@ public class GlRenderer implements Renderer {
       int level = 0;
       do {
         Pixmap canvas = getTmpImage(p2size, p2size);
-        canvas.setColor(0);
+        canvas.setColor(0x88888888);
         canvas.fill();
         try {
-          canvas.drawPixmap(image.playNImage,
-                  0, 0, image.playNImage.getWidth(), image.playNImage.getHeight(),
+          canvas.drawPixmap(image.pixmap,
+                  0, 0, image.pixmap.getWidth(), image.pixmap.getHeight(),
                   0, 0, p2size, p2size);
         } catch(Exception e) {
           GdxQuake2.tools().println("Error rendering image " + image.name + "; size: " + p2size + " MSG: " + e);
@@ -906,7 +908,9 @@ public class GlRenderer implements Renderer {
     GLDebug.checkError(GlState.gl, "uploadImage");
   }
   
-  
+
+  static int loadId;
+
   @Override
   public Image GL_LoadNewImage(String name, int type) {
     GdxQuake2.tools().println("GlRenderer.GL_LoadNewImage(" + name  + ", " + type + ")");
@@ -931,21 +935,44 @@ public class GlRenderer implements Renderer {
         image.width = d.width;
         image.height = d.height;
     }
-    
-    System.out.println("image.playNImage = GdxQuake2.tools().getFileSystem().getImage(name.toLowerCase() + \".png\");");
 
-    image.playNImage = new Pixmap(image.width, image.height, Pixmap.Format.RGBA8888);
-    image.playNImage.setColor((int) (0x88888888));
-    image.playNImage.fill();
-
+    final int loadId = GlRenderer.loadId++;
+    image.loadId = loadId;
+    image.pixmap = new Pixmap(image.width, image.height, Pixmap.Format.RGBA8888);
     pendingImages.add(image);
-    
-//    if (type != com.googlecode.gwtquake.shared.common.QuakeImage.it_pic) {
-//        GlState.gl.glTexImage2D(TEXTURE_2D, 0, RGBA, HOLODECK_TEXTURE_SIZE, HOLODECK_TEXTURE_SIZE, 0, RGBA, 
-//            UNSIGNED_BYTE, holoDeckTexture);
-//        GlState.gl.glTexParameterf(TEXTURE_2D, TEXTURE_MIN_FILTER, LINEAR);
-//        GlState.gl.glTexParameterf(TEXTURE_2D, TEXTURE_MAG_FILTER, LINEAR);
-//    }
+    image.ready = false;
+
+    GdxQuake2.tools().getFileSystem().getFile(name.toLowerCase() + ".png", new Callback<ByteBuffer>() {
+      @Override
+      public void onSuccess(ByteBuffer result) {
+        // Image was recycled in the meantime.
+        if (image.loadId != loadId) {
+          return;
+        }
+        PlatformImage png = GdxQuake2.tools().decodePng(result);
+        for (int y = 0; y < png.getHeight(); y++) {
+          for (int x = 0; x < png.getWidth(); x++) {
+            int argb = png.getArgb(x, y);
+            int rgba = (argb << 8) | ((argb >>> 24) & 255);
+            image.pixmap.drawPixel(x, y, rgba);
+          }
+        }
+        image.ready = true;
+      }
+
+      @Override
+      public void onFailure(Throwable e) {
+        e.printStackTrace();
+      }
+    });
+
+
+/*    if (type != com.googlecode.gdxquake2.core.id.common.QuakeImage.it_pic) {
+        GlState.gl.glTexImage2D(TEXTURE_2D, 0, RGBA, HOLODECK_TEXTURE_SIZE, HOLODECK_TEXTURE_SIZE, 0, RGBA,
+            UNSIGNED_BYTE, holoDeckTexture);
+        GlState.gl.glTexParameterf(TEXTURE_2D, TEXTURE_MIN_FILTER, LINEAR);
+        GlState.gl.glTexParameterf(TEXTURE_2D, TEXTURE_MAG_FILTER, LINEAR);
+    }*/
 
     
     return image;

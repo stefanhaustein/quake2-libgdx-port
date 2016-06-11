@@ -48,7 +48,10 @@ public class Image {
 	public boolean paletted;
 	public boolean complete;
 	
-	public Pixmap playNImage;
+	public Pixmap pixmap;
+	public int loadId;
+	public boolean ready;
+
 	
 	public Image(int id) {
 		this.id = id;

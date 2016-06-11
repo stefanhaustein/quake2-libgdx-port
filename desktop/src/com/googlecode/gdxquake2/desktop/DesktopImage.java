@@ -1,6 +1,7 @@
 package com.googlecode.gdxquake2.desktop;
 
 import com.googlecode.gdxquake2.PlatformImage;
+import com.googlecode.gdxquake2.core.id.common.Buffer;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -11,8 +12,12 @@ import java.nio.ByteBuffer;
 public class DesktopImage implements PlatformImage {
     final BufferedImage bufferedImage;
 
+    DesktopImage(BufferedImage bufferedImage) {
+        this.bufferedImage = bufferedImage;
+    }
+
     DesktopImage(int width, int height) {
-        bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        this(new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB));
     }
 
     @Override
@@ -44,5 +49,10 @@ public class DesktopImage implements PlatformImage {
     @Override
     public int getHeight() {
         return bufferedImage.getHeight();
+    }
+
+    @Override
+    public int getArgb(int x, int y) {
+        return bufferedImage.getRGB(x, y);
     }
 }

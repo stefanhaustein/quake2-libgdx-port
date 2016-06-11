@@ -1,5 +1,6 @@
 package com.googlecode.gdxquake2.desktop;
 
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -14,6 +15,8 @@ import com.googlecode.gdxquake2.core.tools.Callback;
 import com.googlecode.gdxquake2.core.tools.NamedBlob;
 import com.googlecode.gdxquake2.core.tools.PlatformTools;
 
+import javax.imageio.ImageIO;
+
 
 public class DesktopTools implements PlatformTools {
 	
@@ -27,6 +30,21 @@ public class DesktopTools implements PlatformTools {
   @Override
   public PlatformImage createImage(int width, int height) {
     return new DesktopImage(width, height);
+  }
+
+  @Override
+  public PlatformImage decodePng(final ByteBuffer data) {
+    try {
+      InputStream is = new InputStream() {
+        @Override
+        public int read() throws IOException {
+          return data.position() == data.limit() ? -1 : (data.get() & 255);
+        }
+      };
+      return new DesktopImage(ImageIO.read(is));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Override

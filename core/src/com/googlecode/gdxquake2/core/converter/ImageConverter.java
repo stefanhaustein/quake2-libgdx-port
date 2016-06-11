@@ -20,8 +20,6 @@ package com.googlecode.gdxquake2.core.converter;
 
 import java.nio.ByteBuffer;
 
-import com.badlogic.gdx.graphics.Pixmap;
-
 import com.googlecode.gdxquake2.GdxQuake2;
 import com.googlecode.gdxquake2.PlatformImage;
 import com.googlecode.gdxquake2.core.id.common.QuakeImage;
