@@ -68,3 +68,9 @@ build/
 ## OS Specific
 .DS_Store
 Thumbs.db
+
+
+## Jake, AsyncBlobStorage
+
+.blobStorage
+.jake2

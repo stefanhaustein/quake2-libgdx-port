@@ -24,7 +24,7 @@
 package com.googlecode.gdxquake2.core.id.sys;
 
 import com.googlecode.gdxquake2.core.id.client.ClientInput;
-import com.googlecode.gdxquake2.core.id.client.Keys;
+import com.googlecode.gdxquake2.core.id.client.IdKeys;
 import com.googlecode.gdxquake2.core.id.common.ConsoleVariables;
 import com.googlecode.gdxquake2.core.id.common.Constants;
 import com.googlecode.gdxquake2.core.id.common.ExecutableCommand;
@@ -141,10 +141,10 @@ public final class IN {
 		KBD kbd=Globals.re.getKeyboardHandler();
 		for (i=0 ; i<3 ; i++) {
 			if ( (IN.mouse_buttonstate & (1<<i)) != 0 && (IN.mouse_oldbuttonstate & (1<<i)) == 0 )
-				kbd.Do_Key_Event(Keys.K_MOUSE1 + i, true);
+				kbd.Do_Key_Event(IdKeys.K_MOUSE1 + i, true);
 	
 			if ( (IN.mouse_buttonstate & (1<<i)) == 0 && (IN.mouse_oldbuttonstate & (1<<i)) != 0 )
-				kbd.Do_Key_Event(Keys.K_MOUSE1 + i, false);
+				kbd.Do_Key_Event(IdKeys.K_MOUSE1 + i, false);
 		}
 		IN.mouse_oldbuttonstate = IN.mouse_buttonstate;		
     }

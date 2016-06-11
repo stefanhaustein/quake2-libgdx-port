@@ -32,7 +32,7 @@ import com.googlecode.gdxquake2.core.id.common.*;
 import com.googlecode.gdxquake2.core.id.game.Commands;
 import com.googlecode.gdxquake2.core.id.util.Lib;
 
-import static com.googlecode.gdxquake2.core.id.client.Keys.*;
+import static com.googlecode.gdxquake2.core.id.client.IdKeys.*;
 /**
  * Key
  */
@@ -47,13 +47,13 @@ public class Key  {
 	static boolean[] menubound = new boolean[256];
 	static boolean[] consolekeys = new boolean[256];
 
-	// Move to Keys?
+	// Move to IdKeys?
 	static String[] keynames = new String[256];
 
 	static {
-		keynames[Keys.K_TAB] = "TAB";
-		keynames[Keys.K_ENTER] = "ENTER";
-		keynames[Keys.K_ESCAPE] = "ESCAPE";
+		keynames[IdKeys.K_TAB] = "TAB";
+		keynames[IdKeys.K_ENTER] = "ENTER";
+		keynames[IdKeys.K_ESCAPE] = "ESCAPE";
 		keynames[K_SPACE] = "SPACE";
 		keynames[K_BACKSPACE] = "BACKSPACE";
 		keynames[K_UPARROW] = "UPARROW";
@@ -134,9 +134,9 @@ public class Key  {
 		//
 		for (int i = 32; i < 128; i++)
 			consolekeys[i] = true;
-		consolekeys[Keys.K_ENTER] = true;
+		consolekeys[IdKeys.K_ENTER] = true;
 		consolekeys[K_KP_ENTER] = true;
-		consolekeys[Keys.K_TAB] = true;
+		consolekeys[IdKeys.K_TAB] = true;
 		consolekeys[K_LEFTARROW] = true;
 		consolekeys[K_KP_LEFTARROW] = true;
 		consolekeys[K_RIGHTARROW] = true;
@@ -192,7 +192,7 @@ public class Key  {
 //		keyshift['`'] = '~';
 //		keyshift['\\'] = '|';
 
-		menubound[Keys.K_ESCAPE] = true;
+		menubound[IdKeys.K_ESCAPE] = true;
 		for (int i = 0; i < 12; i++)
 			menubound[K_F1 + i] = true;
 
@@ -253,10 +253,10 @@ public class Key  {
 
 		// any key during the attract mode will bring up the menu
 		if (Globals.cl.attractloop && Globals.cls.key_dest != Constants.key_menu && !(key >= K_F1 && key <= K_F12))
-			key = Keys.K_ESCAPE;
+			key = IdKeys.K_ESCAPE;
 
 		// menu key is hardcoded, so the user can never unbind it
-		if (key == Keys.K_ESCAPE) {
+		if (key == IdKeys.K_ESCAPE) {
 			if (!down)
 				return;
 
@@ -399,7 +399,7 @@ public class Key  {
 
 	public static void Message(int key) {
 
-		if (key == Keys.K_ENTER || key == K_KP_ENTER) {
+		if (key == IdKeys.K_ENTER || key == K_KP_ENTER) {
 			if (Globals.chat_team)
 				CommandBuffer.AddText("say_team \"");
 			else
@@ -413,7 +413,7 @@ public class Key  {
 			return;
 		}
 
-		if (key == Keys.K_ESCAPE) {
+		if (key == IdKeys.K_ESCAPE) {
 			Globals.cls.key_dest = Constants.key_game;
 			Globals.chat_buffer = "";
 			return;
@@ -494,7 +494,7 @@ public class Key  {
 			}
 		}
 
-		if (key == Keys.K_ENTER || key == K_KP_ENTER) {
+		if (key == IdKeys.K_ENTER || key == K_KP_ENTER) {
 			// backslash text are commands, else chat
 			if (Globals.key_lines[Globals.edit_line][1] == '\\' || Globals.key_lines[Globals.edit_line][1] == '/')
 				CommandBuffer.AddText(
@@ -516,7 +516,7 @@ public class Key  {
 			return;
 		}
 
-		if (key == Keys.K_TAB) {
+		if (key == IdKeys.K_TAB) {
 			// command completion
 			CompleteCommand();
 			return;

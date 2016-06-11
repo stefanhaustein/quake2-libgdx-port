@@ -16,8 +16,9 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-package com.googlecode.gdxquake2.core.gdx;
+package com.googlecode.gdxquake2.core.id.sound;
 
+import com.googlecode.gdxquake2.core.gdx.GdxALAdapter;
 import com.googlecode.gdxquake2.core.id.client.Console;
 import com.googlecode.gdxquake2.core.id.common.Com;
 import com.googlecode.gdxquake2.core.id.common.ConsoleVariables;
@@ -43,7 +44,7 @@ import java.nio.IntBuffer;
 
 import static com.googlecode.gdxquake2.core.id.common.Constants.CS_PLAYERSKINS;
 
-public class PlayNSoundImpl implements SoundImpl {
+public class ALSoundImpl implements SoundImpl {
 
   static class gwtsfxcache_t extends SfxCache {
 
@@ -62,7 +63,7 @@ public class PlayNSoundImpl implements SoundImpl {
 
 
   static {
-    ALAdapter.impl = new PlayNALAdapter();
+    ALAdapter.impl = new GdxALAdapter();
   }
 
   static {
@@ -95,7 +96,7 @@ public class PlayNSoundImpl implements SoundImpl {
 //  private ShortBuffer streamBuffer = sfxDataBuffer.slice()
 //      .order(ByteOrder.BIG_ENDIAN).asShortBuffer();
 
-  public PlayNSoundImpl() {
+  public ALSoundImpl() {
     Init();
   }
 
@@ -146,7 +147,7 @@ public class PlayNSoundImpl implements SoundImpl {
          * @see jake2.sound.Sound#getName()
          */
   public String getName() {
-    return "HTML5Audio";
+    return "OpenAlAudio";
   }
 
   /* (non-Javadoc)

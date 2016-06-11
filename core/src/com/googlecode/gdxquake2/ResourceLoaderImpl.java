@@ -41,8 +41,8 @@ public class ResourceLoaderImpl implements ResourceLoader.Impl {
     
     final String path = rawPath.toLowerCase();
     System.out.println("Requesting resource: " + path);
-    
-    GdxQuake2.tools().asyncBlobStorage().getFile(path, new Callback<ByteBuffer>() {
+
+    GdxQuake2.tools.asyncBlobStorage().getFile(path, new Callback<ByteBuffer>() {
 
       @Override
       public void onSuccess(ByteBuffer result) {

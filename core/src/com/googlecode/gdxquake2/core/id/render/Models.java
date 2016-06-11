@@ -1326,8 +1326,8 @@ public class Models  {
 
 			do {
 				// texture coordinates come from the draw list
-				globalModelTextureCoordBuf.put(GdxQuake2.tools().intBitsToFloat(order[orderIndex + 0]));
-				globalModelTextureCoordBuf.put(GdxQuake2.tools().intBitsToFloat(order[orderIndex + 1]));
+				globalModelTextureCoordBuf.put(GdxQuake2.tools.intBitsToFloat(order[orderIndex + 0]));
+				globalModelTextureCoordBuf.put(GdxQuake2.tools.intBitsToFloat(order[orderIndex + 1]));
 				globalModelVertexIndexBuf.put((short) order[orderIndex + 2]);
 
 				orderIndex += 3;

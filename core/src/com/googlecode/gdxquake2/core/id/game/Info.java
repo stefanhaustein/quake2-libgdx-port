@@ -79,7 +79,7 @@ public class Info {
 
         if (key.length() > Constants.MAX_INFO_KEY - 1
                 || value.length() > Constants.MAX_INFO_KEY - 1) {
-            Com.Printf("Keys and values must be < 64 characters.\n");
+            Com.Printf("IdKeys and values must be < 64 characters.\n");
             return s;
         }
 

@@ -16,11 +16,8 @@ import com.googlecode.gdxquake2.core.tools.AsyncBlobStorage;
 import com.googlecode.gdxquake2.core.tools.Callback;
 
 public class DesktopAsyncBlobStore implements AsyncBlobStorage {
-  File root;
-  public DesktopAsyncBlobStore(String rootPath) {
-    this.root = new File(rootPath);
-  }
-  
+  File root = new File(".blobStorage");
+
   @Override
   public void getFile(String filename, final Callback<ByteBuffer> callback) {
     final File file = new File(root, filename);

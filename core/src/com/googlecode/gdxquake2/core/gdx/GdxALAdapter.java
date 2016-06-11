@@ -21,6 +21,7 @@ package com.googlecode.gdxquake2.core.gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.googlecode.gdxquake2.GdxQuake2;
 import com.googlecode.gdxquake2.core.id.sound.ALAdapter;
+import com.googlecode.gdxquake2.core.tools.Callback;
 
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
@@ -34,9 +35,9 @@ import java.util.Map;
 
 
 /**
- * Absolutely minimal implementation of AL API using HTML5 audio.
+ * Absolutely minimal implementation of AL API using libgdx
  */
-public class PlayNALAdapter extends ALAdapter {
+public class GdxALAdapter extends ALAdapter {
 
   private float alListenerGain;
   private float alListenerX;
@@ -94,7 +95,18 @@ public class PlayNALAdapter extends ALAdapter {
     BufferData(String location) {
       this.location = location;
       sound = null;
-      System.out.println("GdxQuake2.tools().asyncBlobStorage().getSound(location.toLowerCase());");
+
+      GdxQuake2.tools.asyncBlobStorage().getFile(location.toLowerCase(), new Callback<ByteBuffer>() {
+        @Override
+        public void onSuccess(ByteBuffer data) {
+          sound = GdxQuake2.tools.decodeWav(data);
+        }
+
+        @Override
+        public void onFailure(Throwable cause) {
+          cause.printStackTrace();
+        }
+      });
     }
   }
 

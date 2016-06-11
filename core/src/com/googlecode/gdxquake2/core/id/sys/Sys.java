@@ -47,13 +47,13 @@ public final class Sys extends Constants {
         //StackTrace();
         new Exception(error).printStackTrace();
 
-        GdxQuake2.tools().exit(1);
+        GdxQuake2.tools.exit(1);
     }
 
     public static void Quit() {
         Client.shutdown();
 
-        GdxQuake2.tools().exit(1);
+        GdxQuake2.tools.exit(1);
     }
 
     //ok!

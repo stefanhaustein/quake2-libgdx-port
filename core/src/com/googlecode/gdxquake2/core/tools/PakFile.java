@@ -18,11 +18,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 package com.googlecode.gdxquake2.core.tools;
 
+import com.badlogic.gdx.Gdx;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 
-public class PakFile {
+public class PakFile implements Runnable {
   static final int SIZE = 64;
   static final int NAME_SIZE = 56;
   private static final int MAX_FILES_IN_PACK = 4096;
@@ -31,8 +33,11 @@ public class PakFile {
 
   private ByteBuffer packhandle;
   private int numpackfiles;
+  private Callback<NamedBlob> dataCallback;
+  private Callback<Void> readyCallback;
+  private int index;
   
-  public PakFile(ByteBuffer packhandle) {
+  public PakFile(ByteBuffer packhandle, Callback<NamedBlob> dataCallback, Callback<Void> readyCallback) {
     this.packhandle = packhandle;
     this.packhandle.order(ByteOrder.LITTLE_ENDIAN);
 
@@ -51,35 +56,47 @@ public class PakFile {
     }
 
     packhandle.position(dirofs);
+    this.dataCallback = dataCallback;
+    this.readyCallback = readyCallback;
   }
   
 
-  public void unpack(final PlatformTools tools, final Callback<NamedBlob> dataCallback, final Callback<Void> readyCallback) {
-    int savedLimit = packhandle.limit();
-    for (int i = 0; i < numpackfiles; i++){
-      byte[] tmpText = new byte[NAME_SIZE];
-      packhandle.get(tmpText);
-
-      int cut = 0;
-      while (cut < tmpText.length && tmpText[cut] > ' ') {
-        cut++;
-      }
-
-      String name = new String(tmpText, 0, cut).toLowerCase();
-
-      int filepos = packhandle.getInt();
-      int filelen = packhandle.getInt();
-
-      int savedPos = packhandle.position();
-
-      packhandle.position(filepos);
-      packhandle.limit(filelen + filepos);
-
-      dataCallback.onSuccess(new NamedBlob(name, packhandle.slice()));
-
-      packhandle.limit(savedLimit);
-      packhandle.position(savedPos);
+  public void run() {
+    if (numpackfiles == 0) {
+      readyCallback.onSuccess(null);
+      return;
     }
-    readyCallback.onSuccess(null);
+    numpackfiles--;
+
+    int savedLimit = packhandle.limit();
+    byte[] tmpText = new byte[NAME_SIZE];
+    packhandle.get(tmpText);
+
+    int cut = 0;
+    while (cut < tmpText.length && tmpText[cut] > ' ') {
+      cut++;
+    }
+
+    final String name = new String(tmpText, 0, cut).toLowerCase();
+
+    int filepos = packhandle.getInt();
+    int filelen = packhandle.getInt();
+
+    int savedPos = packhandle.position();
+
+    packhandle.position(filepos);
+    packhandle.limit(filelen + filepos);
+    final ByteBuffer slice = packhandle.slice();
+    packhandle.limit(savedLimit);
+    packhandle.position(savedPos);
+
+    Gdx.app.postRunnable(new Runnable() {
+      @Override
+      public void run() {
+        dataCallback.onSuccess(new NamedBlob(name, slice));
+      }
+    });
+
+    Gdx.app.postRunnable(this);
   }
 }

@@ -122,7 +122,7 @@ public class GlState
   public static void checkError(String string) {
     int err = gl.glGetError();
     if (err != 0) {
-      GdxQuake2.tools().println("Gl error " + err + ": " + GLDebug.getConstantName(err) + " @ " + string);
+      GdxQuake2.tools.println("Gl error " + err + ": " + GLDebug.getConstantName(err) + " @ " + string);
     }
   }
 

@@ -1,4 +1,4 @@
-package com.googlecode.gdxquake2;
+package com.googlecode.gdxquake2.core.installer;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -9,36 +9,30 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 
 import com.badlogic.gdx.graphics.Pixmap;
+import com.googlecode.gdxquake2.GdxQuake2;
 import com.googlecode.gdxquake2.core.tools.*;
 import com.googlecode.gdxquake2.core.converter.ImageConverter;
 import com.googlecode.gdxquake2.core.converter.PCXConverter;
 import com.googlecode.gdxquake2.core.converter.TGAConverter;
 import com.googlecode.gdxquake2.core.converter.WALConverter;
 
-public class Installer {
+public class Installer implements Runnable {
   Callback<Void> doneCallback;
   ImageConverter pcxConverter = new PCXConverter();
   ImageConverter tgaConverter = new TGAConverter();
   ImageConverter walConverter = new WALConverter();
+  String url;
   boolean failed = false;
   int pending = 0;
 
-  public Installer(Callback<Void> doneCallback) {
+  public Installer(String url, Callback<Void> doneCallback) {
     this.doneCallback = doneCallback;
-
-    try {
-      FileHandle marker = Gdx.files.getFileHandle("libgdx-local-marker.txt", Files.FileType.Local);
-      Writer writer = marker.writer(false, "utf-8");
-      writer.write("Hello World\n");
-      writer.close();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    this.url = url;
   }
 
   void error(String msg, Throwable cause) {
     failed = true;
-    GdxQuake2.tools.println(msg);
+    GdxQuake2.showInitStatus(msg);
     doneCallback.onFailure(cause);
   }
 
@@ -64,7 +58,7 @@ public class Installer {
 
 
   public void run() {
-    GdxQuake2.tools.unzip("http://commondatastorage.googleapis.com/quake2demo/q2-314-demo-x86.exe",
+    GdxQuake2.tools.unzip(url,
         new Callback<NamedBlob>() {
            @Override
            public void onSuccess(NamedBlob result) {
@@ -72,6 +66,7 @@ public class Installer {
            }
            @Override
            public void onFailure(Throwable cause) {
+             error("Unzip failed", cause);
            }
         },
         await());
@@ -81,10 +76,8 @@ public class Installer {
   void processFile(String path, ByteBuffer data) {
     path = path.toLowerCase();
     if (path.endsWith(".pak")) {
-      GdxQuake2.tools.println("Unpacking: " + path);
+      GdxQuake2.showInitStatus("Unpacking: " + path);
       unpack(path, data);
-    } else if (path.endsWith(".wav")) {
-      GdxQuake2.tools().asyncBlobStorage().saveFile(path, data, await());
     } else {
       ImageConverter converter = null;
       if (path.endsWith(".pcx")) {
@@ -94,31 +87,31 @@ public class Installer {
       } else if (path.endsWith(".wal")) {
         converter = walConverter;
       } else {
-        // tools.println("Skipping: " + path);
+        GdxQuake2.tools.asyncBlobStorage().saveFile(path, data, await());
         return;
       }
-      GdxQuake2.tools.println("Converting: " + path);
+      GdxQuake2.showInitStatus("Converting: " + path);
       convert(path, converter, data);
     }
   }
 
 
   void unpack(String path, ByteBuffer data) {
-    GdxQuake2.tools.println("Unpacking pak file");
-    final String prefix = path.substring(0, path.lastIndexOf("/") + 1);
+    GdxQuake2.showInitStatus("Unpacking pak file");
+    Callback<NamedBlob> extractedCallback = new Callback<NamedBlob>() {
+      @Override
+      public void onSuccess(NamedBlob result) {
+        processFile(result.name, result.data);
+      }
 
-    new PakFile(data).unpack(GdxQuake2.tools,
-        new Callback<NamedBlob>() {
-          @Override
-          public void onSuccess(NamedBlob result) {
-            processFile(prefix + result.name, result.data);
-          }
+      @Override
+      public void onFailure(Throwable cause) {
+        error("Error unpacking pak file", cause);
+      }
+    };
 
-          @Override
-          public void onFailure(Throwable cause) {
-            error("Error unpacking pak file", cause);
-          }
-      }, await());
+    PakFile pakFile = new PakFile(data, extractedCallback, await());
+    Gdx.app.postRunnable(pakFile);
   }
 
 
@@ -126,7 +119,7 @@ public class Installer {
     Pixmap image = converter.convert(data);
     GdxQuake2.imageSizes.putInteger(path, image.getWidth() * 10000 + image.getHeight());
     ByteBuffer png = GdxQuake2.tools.encodePng(image);
-    GdxQuake2.tools().asyncBlobStorage().saveFile(path + ".png", png, await());
+    GdxQuake2.tools.asyncBlobStorage().saveFile(path + ".png", png, await());
   }
 
 }

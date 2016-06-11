@@ -1,5 +1,6 @@
 package com.googlecode.gdxquake2.core.tools;
 
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Pixmap;
 
 import java.nio.ByteBuffer;
@@ -7,7 +8,8 @@ import java.nio.ByteBuffer;
 public interface PlatformTools {
   AsyncBlobStorage asyncBlobStorage();
 
-  Pixmap decodePng(ByteBuffer result);
+  Sound decodeWav(ByteBuffer data);
+  Pixmap decodePng(ByteBuffer data);
   ByteBuffer encodePng(Pixmap pixmap);
 
   void unzip(final String url, Callback<NamedBlob> dataCallback, Callback<Void> readyCallback);

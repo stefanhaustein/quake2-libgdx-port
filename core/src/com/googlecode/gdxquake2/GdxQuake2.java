@@ -3,8 +3,14 @@ package com.googlecode.gdxquake2;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.scenes.scene2d.Event;
+import com.badlogic.gdx.scenes.scene2d.EventListener;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.TimeUtils;
-import com.googlecode.gdxquake2.core.gdx.PlayNSoundImpl;
+import com.googlecode.gdxquake2.core.id.sound.ALSoundImpl;
 import com.googlecode.gdxquake2.core.gl11.GL11Emulation;
 import com.googlecode.gdxquake2.core.id.client.Dimension;
 import com.googlecode.gdxquake2.core.id.client.Screen;
@@ -14,18 +20,22 @@ import com.googlecode.gdxquake2.core.id.common.QuakeCommon;
 import com.googlecode.gdxquake2.core.id.common.ResourceLoader;
 import com.googlecode.gdxquake2.core.id.render.GlRenderer;
 import com.googlecode.gdxquake2.core.id.sound.Sound;
+import com.googlecode.gdxquake2.core.installer.Installer;
 import com.googlecode.gdxquake2.core.tools.Callback;
 import com.googlecode.gdxquake2.core.tools.PlatformTools;
 
 public class GdxQuake2 extends ApplicationAdapter {
+	static final String DOWNLOAD_COMPLETE = "downloadComplete";
 
-	public static final String DOWNLOAD_COMPLETE = "downloadComplete";
-
-	public static Preferences imageSizes;
-	public static Preferences state;
 	public static PlatformTools tools;
+	public static Preferences imageSizes;
+
+	private static Preferences state;
+	private static Label statusLabel;
+
 	private boolean initialized;
 	private double startTime;
+	private Stage installationStage;
 
 	public GdxQuake2(PlatformTools tools) {
 		GdxQuake2.tools = tools;
@@ -33,41 +43,87 @@ public class GdxQuake2 extends ApplicationAdapter {
 
 	@Override
 	public void create () {
-		imageSizes = Gdx.app.getPreferences("imageSizes");
-		state = Gdx.app.getPreferences("state");
+		imageSizes = Gdx.app.getPreferences("q2gdx-imageSizes");
+		state = Gdx.app.getPreferences("q2gdx-state");
 
 		if (state.getBoolean(DOWNLOAD_COMPLETE, false)) {
 			initGame();
 		} else {
-			Installer installer = new Installer(new Callback<Void>() {
-				@Override
-				public void onSuccess(Void result) {
-					tools.println("All files successfully installed and converted");
-					state.putBoolean(DOWNLOAD_COMPLETE, true);
-					state.flush();
-					initGame();
-				}
-
-				@Override
-				public void onFailure(Throwable cause) {
-					error("Error installing files", cause);
-				}
-
-			});
-			installer.run();
+			showInstaller();
 		}
 	}
 
-	void error(String msg, Throwable cause) {
-		tools.println(msg + ": " + cause.toString());
+	void initError(String msg, Throwable cause) {
+		showInitStatus(msg + ": " + cause.toString());
 	}
 
 
-	public static PlatformTools tools() {
-		return tools;
+	/**
+	 * Use this to show updates before the quake engine is ready.
+     */
+	public static void showInitStatus(String s) {
+		if (statusLabel != null) {
+			statusLabel.setText(s);
+		}
+		tools.println(s);
 	}
 
+	public void showInstaller() {
+		Skin skin = new Skin(Gdx.files.internal("uiskin.json"));
+		installationStage = new Stage();
+		Gdx.input.setInputProcessor(installationStage);
 
+		final Table table = new Table(skin);
+		table.setFillParent(true);
+		table.add("Quake II libGDX port installer");
+		table.row();
+		table.add(" ");
+		table.row();
+		table.add("Download assets from:");
+		table.row();
+		final TextField urlField = new TextField("http://commondatastorage.googleapis.com/quake2demo/q2-314-demo-x86.exe", skin);
+		table.add(urlField).width(600);
+		table.row();
+		table.add(" ");
+		table.row();
+		final TextButton button = new TextButton("Engage!", skin);
+		table.add(button);
+		table.row();
+		table.add(" ");
+		table.row();
+		statusLabel = new Label("(Waiting for user confirmation)", skin);
+		table.add(statusLabel).expandX();
+		button.addListener(new EventListener() {
+			@Override
+			public boolean handle(Event event) {
+				if (event instanceof ChangeListener.ChangeEvent) {
+					urlField.setDisabled(true);
+					button.removeListener(this);
+					button.setVisible(false);
+					String url = urlField.getText();
+					showInitStatus("(Initiating download...)");
+					Installer installer = new Installer(url, new Callback<Void>() {
+						@Override
+						public void onSuccess(Void result) {
+							showInitStatus("All files successfully installed and converted");
+							state.putBoolean(DOWNLOAD_COMPLETE, true);
+							state.flush();
+							initGame();
+						}
+
+						@Override
+						public void onFailure(Throwable cause) {
+							initError("Error installing files", cause);
+						}
+
+					});
+					Gdx.app.postRunnable(installer);
+				}
+				return true;
+			}
+		});
+		installationStage.addActor(table);
+	}
 
 
 	public static Dimension getImageSize(String name) {
@@ -97,31 +153,32 @@ public class GdxQuake2 extends ApplicationAdapter {
 //    System.out.println("Screen dimension: " + new Dimension(PlayN.graphics().screenWidth(),  PlayN.graphics().screenHeight()));
 
 		ResourceLoader.impl = new ResourceLoaderImpl();
-		Sound.impl = new PlayNSoundImpl();
-
+		Sound.impl = new ALSoundImpl();
 
 		QuakeCommon.Init(new String[] { "GQuake" });
 		Globals.nostdout = ConsoleVariables.Get("nostdout", "0", 0);
 
 		startTime = TimeUtils.millis();
-
 		initialized = true;
 	}
 
 
 	@Override
 	public void render() {
-		Globals.re.checkPendingImages();
-		if (!initialized) {
-			return;
-		}
-		if (ResourceLoader.Pump()) {
-			Screen.UpdateScreen2();
-		} else {
-			double curTime = TimeUtils.millis();
-			// GwtKBD.Frame((int) alpha);
-			QuakeCommon.Frame((int) (curTime - startTime));
-			startTime = curTime;
+		if (initialized) {
+			Globals.re.checkPendingImages();
+			if (ResourceLoader.Pump()) {
+				Screen.UpdateScreen2();
+			} else {
+				double curTime = TimeUtils.millis();
+				// GwtKBD.Frame((int) alpha);
+				QuakeCommon.Frame((int) (curTime - startTime));
+				startTime = curTime;
+			}
+		} else if (installationStage != null) {
+			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+			installationStage.act(Gdx.graphics.getDeltaTime());
+			installationStage.draw();
 		}
 	}
 }

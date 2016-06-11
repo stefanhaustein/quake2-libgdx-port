@@ -63,12 +63,12 @@ public final class Buffer {
 
     //ok.
 	public void putFloat(float f) {
-	    this.putInt(GdxQuake2.tools().floatToIntBits(f));
+		this.putInt(GdxQuake2.tools.floatToIntBits(f));
 	}
 
     public float getFloat() {
 	    int n = getInt();
-	    return GdxQuake2.tools().intBitsToFloat(n);
+		return GdxQuake2.tools.intBitsToFloat(n);
 	}
 
     public int getInt() {

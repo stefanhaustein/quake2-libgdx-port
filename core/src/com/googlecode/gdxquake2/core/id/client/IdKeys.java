@@ -3,7 +3,7 @@ package com.googlecode.gdxquake2.core.id.client;
 /**
  * Keyboard constants.
  */
-public class Keys {
+public class IdKeys {
 
 	//
 	// these are the key numbers that should be passed to Key_Event
