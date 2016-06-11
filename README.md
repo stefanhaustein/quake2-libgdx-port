@@ -1,10 +1,11 @@
 # quake2-libgdx-port
 
-This is a fork of quake2-playn-port and still work in progres, **no platforms is fully working yet**.
+This is a fork of quake2-playn-port and still work in progres.
 
 Status: 
 
- - 2016-06-10: Desktop file donwload, extraction and conversion seems to work.
+ - 2016-06-11: Desktop version basically works (incl. libGDX scene2d "installer" UI) 
+ - 2016-06-10: Desktop file donwload, extraction and conversion seems to work.
 
 
 Demo of the old playn version: http://quake2playn.appspot.com/ 
