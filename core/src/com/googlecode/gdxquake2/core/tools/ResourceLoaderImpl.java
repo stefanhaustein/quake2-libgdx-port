@@ -16,12 +16,13 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-package com.googlecode.gdxquake2;
+package com.googlecode.gdxquake2.core.tools;
 
 
 import java.nio.ByteBuffer;
 
 
+import com.googlecode.gdxquake2.GdxQuake2;
 import com.googlecode.gdxquake2.core.id.common.ResourceLoader;
 import com.googlecode.gdxquake2.core.tools.Callback;
 

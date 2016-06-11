@@ -5,6 +5,8 @@
 
 	<inherits name='GdxQuake2' />
 	<entry-point class='com.googlecode.gdxquake2.client.HtmlLauncher' />
+
+	<super-source path='emul' />
 	
 	<set-configuration-property name="gdx.assetpath" value="../android/assets" />
 </module>

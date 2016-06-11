@@ -164,7 +164,7 @@ public final class Sys extends Constants {
             // '\n');
             try {
                 Pattern.compile(regexpr);
-            } catch (PatternSyntaxException e) {
+            } catch (Exception e) {
                 Com.Printf("invalid file pattern ( *.* is used instead )\n");
                 return ".*"; // the default
             }

@@ -14,6 +14,14 @@ public class HtmlLauncher extends GwtApplication {
 
         @Override
         public ApplicationListener createApplicationListener () {
-                return new GdxQuake2();
+/*
+                HtmlPlatform.Config config = new HtmlPlatform.Config();
+                config.experimentalFullscreen = true;
+                config.transparentCanvas = false;
+                config.mode = HtmlPlatform.Mode.WEBGL;
+                HtmlPlatform platform = HtmlPlatform.register(config);
+                final Tools tools = new GwtTools();
+*/
+                return new GdxQuake2(new GwtTools());
         }
 }
