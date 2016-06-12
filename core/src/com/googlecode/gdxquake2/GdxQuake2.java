@@ -88,7 +88,9 @@ public class GdxQuake2 extends ApplicationAdapter {
 		table.row();
 		table.add("Download assets from:");
 		table.row();
-		final TextField urlField = new TextField("http://commondatastorage.googleapis.com/quake2demo/q2-314-demo-x86.exe", skin);
+		final TextField urlField = new TextField(
+   				"http://commondatastorage.googleapis.com/quake2demo/q2-314-demo-x86.exe",
+				skin);
 		table.add(urlField).width(600);
 		table.row();
 		table.add(" ");
