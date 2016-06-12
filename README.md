@@ -1,6 +1,13 @@
 # quake2-libgdx-port
 
-This is a fork of quake2-playn-port and still work in progres.
+This is a fork of quake2-playn-port and still work in progress.
+
+Goals:
+
+ - Become familiar with libgdx
+ - Fix web sound
+ - Make sure the web version works with all modern browsers
+ - Make the code run on Android
 
 Status: 
 
