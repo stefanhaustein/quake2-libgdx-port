@@ -2,6 +2,7 @@ package com.googlecode.gdxquake2.client;
 
 import java.nio.ByteBuffer;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.googlecode.gdxquake2.core.tools.AsyncBlobStorage;
@@ -54,7 +55,7 @@ public class GwtTools implements PlatformTools {
 
   @Override
   public void unzip(String url, Callback<NamedBlob> dataCallback, Callback<Void> readyCallback) {
-
+    Gdx.app.postRunnable(new GwtUnzip(url, dataCallback, readyCallback));
   }
 
   @Override

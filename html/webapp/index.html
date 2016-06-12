@@ -5,7 +5,10 @@
               <meta http-equiv="content-type" content="text/html; charset=UTF-8">
               <link href="styles.css" rel="stylesheet" type="text/css">
               <script src="soundmanager2-setup.js"></script>
-  			  <script src="soundmanager2-jsmin.js"></script>
+              <script src="soundmanager2-jsmin.js"></script>
+              <script src="zip/zip.js"></script>
+              <script src="zip/zip-ext.js"></script>
+              <script src="zip/inflate.js"></script>
        </head>
 
        <body>
@@ -15,6 +18,10 @@
        </body>
 
        <script>
+              window.zip = zip;  // ?!?
+              zip.useWebWorkers = false;
+              // zip.workerScriptsPath = "zip/";
+
               function handleMouseDown(evt) {
                 evt.preventDefault();
                 evt.stopPropagation();
