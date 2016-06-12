@@ -1,5 +1,6 @@
 package com.googlecode.gdxquake2.client;
 
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.BufferUtils;
 import com.google.gwt.core.client.JavaScriptObject;
@@ -45,13 +46,11 @@ public class GwtUnzip implements Runnable {
     }
 
     private native void processEntry(JavaScriptObject zipEntry) /*-{
-      $wnd.console.log("processEntry", zipEntry);
       var zip = $wnd.zip;
       var self = this;
 
       var fileName = zipEntry.filename;
       if (zipEntry.directory) {
-        $wnd.console.log("Processing directory " + fileName);
         self.@com.googlecode.gdxquake2.client.GwtUnzip::postSelf()();
         return;
       }
@@ -61,17 +60,14 @@ public class GwtUnzip implements Runnable {
         this.pos = 0;
       };
       ArrayWriter.prototype.init = function(callback) {
-        $wnd.console.log("init", arguments);
         callback();
       };
       ArrayWriter.prototype.writeUint8Array = function(array, callback) {
-        $wnd.console.log("writeUint8Array", arguments);
         this.data.set(array, this.pos);
         this.pos += array.length;
         callback();
       };
       ArrayWriter.prototype.getData = function(callback) {
-        $wnd.console.log("getData", arguments);
         callback(this.data);
       }
 
@@ -79,12 +75,10 @@ public class GwtUnzip implements Runnable {
 
       zipEntry.getData(new ArrayWriter(array),
         function(array) {
-          $wnd.console.log("done: ",  array);
           self.@com.googlecode.gdxquake2.client.GwtUnzip::currentName = fileName;
           self.@com.googlecode.gdxquake2.client.GwtUnzip::entryAvailable()();
         },
         function(current, total) {
-          //$wnd.console.log("update", current, total);
         }
       );
     }-*/;
@@ -105,14 +99,12 @@ public class GwtUnzip implements Runnable {
       var zip = $wnd.zip;
       var self = this;
       zip.createReader(new zip.HttpReader(url), function(reader) {
-        $wnd.console.log("Created ZIP reader, getting entries");
         reader.getEntries(function(zipEntries) {
-          $wnd.console.log("Entries available", zipEntries);
           self.@com.googlecode.gdxquake2.client.GwtUnzip::zipEntries = zipEntries;
           self.@com.googlecode.gdxquake2.client.GwtUnzip::postSelf()();
-          $wnd.console.log("My code has changed, see!");
         }); // getEntries
       }, function(msg) {
+        // TODO: done error callback
         $wnd.console.log("Creating a ZIP reader failed: " + msg);
       });
     }-*/;

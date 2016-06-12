@@ -1,5 +1,6 @@
 package com.googlecode.gdxquake2;
 
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
@@ -48,6 +49,8 @@ public class GdxQuake2 extends ApplicationAdapter {
 
 	@Override
 	public void create () {
+		Gdx.app.setLogLevel(Application.LOG_DEBUG);
+
 		imageSizes = Gdx.app.getPreferences("q2gdx-imageSizes");
 		state = Gdx.app.getPreferences("q2gdx-state");
 

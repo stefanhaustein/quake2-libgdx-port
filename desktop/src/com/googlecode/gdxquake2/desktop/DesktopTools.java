@@ -72,7 +72,6 @@ public class DesktopTools implements PlatformTools {
   }
 
   DesktopAsyncBlobStore fileSystem = new DesktopAsyncBlobStore();
-  int wavCount = 0;
 
   @Override
   public AsyncBlobStorage asyncBlobStorage() {
@@ -82,6 +81,11 @@ public class DesktopTools implements PlatformTools {
   @Override
   public void unzip(final String url, final Callback<NamedBlob> dataCallback, final Callback<Void> readyCallback) {
     Gdx.app.postRunnable(new Unzipper(url, dataCallback, readyCallback));
+  }
+
+  @Override
+  public void log(String s) {
+    System.out.println(s);
   }
 
   @Override

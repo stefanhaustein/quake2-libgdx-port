@@ -1,21 +1,13 @@
 package com.googlecode.gdxquake2.core.installer;
 
-import java.io.IOException;
-import java.io.Writer;
 import java.nio.ByteBuffer;
 
-import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.files.FileHandle;
 
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.PixmapIO;
 import com.googlecode.gdxquake2.GdxQuake2;
 import com.googlecode.gdxquake2.core.tools.*;
-import com.googlecode.gdxquake2.core.converter.ImageConverter;
-import com.googlecode.gdxquake2.core.converter.PCXConverter;
-import com.googlecode.gdxquake2.core.converter.TGAConverter;
-import com.googlecode.gdxquake2.core.converter.WALConverter;
 
 public class Installer implements Runnable {
   Callback<Void> doneCallback;
@@ -88,6 +80,7 @@ public class Installer implements Runnable {
       } else if (path.endsWith(".wal")) {
         converter = walConverter;
       } else {
+        GdxQuake2.showInitStatus("Extracting: " + path);
         GdxQuake2.tools.asyncBlobStorage().saveFile(path, data, await());
         return;
       }
