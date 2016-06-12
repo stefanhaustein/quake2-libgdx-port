@@ -4,6 +4,7 @@ This is a fork of quake2-playn-port and still work in progres.
 
 Status: 
 
+ - 2016-06-12: Web download, decompression and conversion works.
  - 2016-06-11: Desktop version basically works (incl. libGDX scene2d "installer" UI) 
  - 2016-06-10: Desktop file donwload, extraction and conversion seems to work.
 
