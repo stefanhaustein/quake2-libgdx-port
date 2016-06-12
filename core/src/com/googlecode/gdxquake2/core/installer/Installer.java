@@ -9,6 +9,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 
 import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.PixmapIO;
 import com.googlecode.gdxquake2.GdxQuake2;
 import com.googlecode.gdxquake2.core.tools.*;
 import com.googlecode.gdxquake2.core.converter.ImageConverter;
@@ -118,8 +119,9 @@ public class Installer implements Runnable {
   void convert(String path, final ImageConverter converter, ByteBuffer data) {
     Pixmap image = converter.convert(data);
     GdxQuake2.imageSizes.putInteger(path, image.getWidth() * 10000 + image.getHeight());
-    ByteBuffer png = GdxQuake2.tools.encodePng(image);
-    GdxQuake2.tools.asyncBlobStorage().saveFile(path + ".png", png, await());
+    RamFile ramFile = new RamFile(path + ".png");
+    PixmapIO.writePNG(ramFile, image);
+    GdxQuake2.tools.asyncBlobStorage().saveFile(path + ".png", ramFile.getData(), await());
   }
 
 }

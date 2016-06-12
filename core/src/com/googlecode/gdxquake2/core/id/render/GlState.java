@@ -25,6 +25,7 @@ package com.googlecode.gdxquake2.core.id.render;
 
 import java.nio.FloatBuffer;
 
+import com.badlogic.gdx.Gdx;
 import com.googlecode.gdxquake2.GdxQuake2;
 import com.googlecode.gdxquake2.core.gl11.GL11;
 import com.googlecode.gdxquake2.core.gl11.GLDebug;
@@ -122,7 +123,7 @@ public class GlState
   public static void checkError(String string) {
     int err = gl.glGetError();
     if (err != 0) {
-      GdxQuake2.tools.println("Gl error " + err + ": " + GLDebug.getConstantName(err) + " @ " + string);
+      Gdx.app.log("GlState", "Gl error " + err + ": " + GLDebug.getConstantName(err) + " @ " + string);
     }
   }
 

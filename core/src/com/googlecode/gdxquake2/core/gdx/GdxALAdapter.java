@@ -18,10 +18,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 package com.googlecode.gdxquake2.core.gdx;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.googlecode.gdxquake2.GdxQuake2;
 import com.googlecode.gdxquake2.core.id.sound.ALAdapter;
 import com.googlecode.gdxquake2.core.tools.Callback;
+import com.googlecode.gdxquake2.core.tools.RamFile;
 
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
@@ -99,7 +101,8 @@ public class GdxALAdapter extends ALAdapter {
       GdxQuake2.tools.asyncBlobStorage().getFile(location.toLowerCase(), new Callback<ByteBuffer>() {
         @Override
         public void onSuccess(ByteBuffer data) {
-          sound = GdxQuake2.tools.decodeWav(data);
+          RamFile ramFile = new RamFile("ramfile.wav", data);
+          sound = Gdx.audio.newSound(ramFile); //GdxQuake2.tools.decodeWav(data);
         }
 
         @Override

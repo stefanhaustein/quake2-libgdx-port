@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.googlecode.gdxquake2.GdxQuake2;
@@ -53,6 +54,7 @@ import com.googlecode.gdxquake2.core.id.sys.KBD;
 import com.googlecode.gdxquake2.core.id.util.Lib;
 import com.googlecode.gdxquake2.core.id.util.Vargs;
 import com.googlecode.gdxquake2.core.tools.Callback;
+import com.googlecode.gdxquake2.core.tools.RamFile;
 
 /**
  * LWJGLRenderer
@@ -60,6 +62,7 @@ import com.googlecode.gdxquake2.core.tools.Callback;
  * @author dsanders/cwei
  */
 public class GlRenderer implements Renderer {
+  static final String TAG = "GlRenderer";
   int width;
   int height;
   List<Image> pendingImages = new ArrayList<Image>();
@@ -818,7 +821,7 @@ public class GlRenderer implements Renderer {
     for (int i = pendingImages.size() - 1; i >= 0; i--) {
       Image image = pendingImages.get(i);
       if (image.ready) {
-        GdxQuake2.tools.println("Image ready: " + image);
+        Gdx.app.log("GlRenderer", "Image ready: " + image);
         uploadImage(image);
         pendingImages.remove(i);
       }
@@ -853,7 +856,7 @@ public class GlRenderer implements Renderer {
 
     Images.GL_Bind(image.texnum);
     if (image.type == com.googlecode.gdxquake2.core.id.common.QuakeImage.it_pic) {
-      GdxQuake2.tools.println("upload non-mipmap image " + image.name + ":" + image.width + "x" + image.height);
+      Gdx.app.log(TAG, "upload non-mipmap image " + image.name + ":" + image.width + "x" + image.height);
       GlState.gl.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_CLAMP_TO_EDGE);
       GlState.gl.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_CLAMP_TO_EDGE);
       GlState.gl.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
@@ -862,7 +865,7 @@ public class GlRenderer implements Renderer {
       image.upload_width = image.width;
       image.upload_height = image.height;
     } else if (image.type == com.googlecode.gdxquake2.core.id.common.QuakeImage.it_sky) {
-      GdxQuake2.tools.println("upload sky image " + image.name + ":" + image.width + "x" + image.height);
+      Gdx.app.log(TAG, "upload sky image " + image.name + ":" + image.width + "x" + image.height);
       GlState.gl.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_CLAMP_TO_EDGE);
       GlState.gl.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_CLAMP_TO_EDGE);
       GlState.gl.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
@@ -876,7 +879,7 @@ public class GlRenderer implements Renderer {
       Images.skyTarget.upload_height = image.height;
       texSubImage2D(image.pixmap,  GL20.GL_TEXTURE_2D, 0, image.width * image.skyIndex, 0, GL20.GL_RGBA, GL20.GL_UNSIGNED_BYTE);
     } else {
-      GdxQuake2.tools.println("upload mipmap image " + image.name + ":" + image.width + "x" + image.height);
+      Gdx.app.log(TAG, "upload mipmap image " + image.name + ":" + image.width + "x" + image.height);
       GlState.gl.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_REPEAT);
       GlState.gl.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_REPEAT);
       GlState.gl.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR_MIPMAP_LINEAR);
@@ -895,7 +898,7 @@ public class GlRenderer implements Renderer {
                   0, 0, image.pixmap.getWidth(), image.pixmap.getHeight(),
                   0, 0, p2size, p2size);
         } catch(Exception e) {
-          GdxQuake2.tools.println("Error rendering image " + image.name + "; size: " + p2size + " MSG: " + e);
+          Gdx.app.log(TAG, "Error rendering image " + image.name + "; size: " + p2size + " MSG: " + e);
           break;
         }
         texImage2D(canvas,  GL20.GL_TEXTURE_2D, level++, GL20.GL_RGBA, GL20.GL_RGBA, GL20.GL_UNSIGNED_BYTE);
@@ -912,7 +915,7 @@ public class GlRenderer implements Renderer {
 
   @Override
   public Image GL_LoadNewImage(String name, int type) {
-    GdxQuake2.tools.println("GlRenderer.GL_LoadNewImage(" + name  + ", " + type + ")");
+    Gdx.app.log(TAG, "GlRenderer.GL_LoadNewImage(" + name  + ", " + type + ")");
     
     final Image image = Images.GL_Find_free_image_t(name, type);
 
@@ -926,11 +929,11 @@ public class GlRenderer implements Renderer {
     }
     d = GdxQuake2.getImageSize(name);
     if (d == null) {
-      GdxQuake2.tools.println("*** Size not found for " + name);
+      Gdx.app.log(TAG, "*** Size not found for " + name);
         image.width = 128;
         image.height = 128;
     } else {
-      GdxQuake2.tools.println("Size: " + d);
+      Gdx.app.log(TAG, "Size: " + d);
         image.width = d.width;
         image.height = d.height;
     }
@@ -948,7 +951,8 @@ public class GlRenderer implements Renderer {
         if (image.loadId != loadId) {
           return;
         }
-        image.pixmap = GdxQuake2.tools.decodePng(result);
+        RamFile ramFile = new RamFile("mem.png", result);
+        image.pixmap = new Pixmap(ramFile);
         image.ready = true;
       }
 

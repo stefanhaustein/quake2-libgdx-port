@@ -70,7 +70,6 @@ public class GdxQuake2 extends ApplicationAdapter {
 		if (statusLabel != null) {
 			statusLabel.setText(s);
 		}
-		tools.println(s);
 	}
 
 	public void showInstaller() {

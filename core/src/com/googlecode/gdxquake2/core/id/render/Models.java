@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 package com.googlecode.gdxquake2.core.id.render;
 
 
+import com.badlogic.gdx.utils.NumberUtils;
 import com.googlecode.gdxquake2.GdxQuake2;
 import com.googlecode.gdxquake2.core.id.client.Window;
 import com.googlecode.gdxquake2.core.id.common.AsyncCallback;
@@ -1326,8 +1327,8 @@ public class Models  {
 
 			do {
 				// texture coordinates come from the draw list
-				globalModelTextureCoordBuf.put(GdxQuake2.tools.intBitsToFloat(order[orderIndex + 0]));
-				globalModelTextureCoordBuf.put(GdxQuake2.tools.intBitsToFloat(order[orderIndex + 1]));
+				globalModelTextureCoordBuf.put(NumberUtils.intBitsToFloat(order[orderIndex + 0]));
+				globalModelTextureCoordBuf.put(NumberUtils.intBitsToFloat(order[orderIndex + 1]));
 				globalModelVertexIndexBuf.put((short) order[orderIndex + 2]);
 
 				orderIndex += 3;

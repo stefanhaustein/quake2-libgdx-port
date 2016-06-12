@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 package com.googlecode.gdxquake2.core.id.common;
 
+import com.badlogic.gdx.utils.NumberUtils;
 import com.googlecode.gdxquake2.GdxQuake2;
 
 import java.nio.ByteOrder;
@@ -63,12 +64,12 @@ public final class Buffer {
 
     //ok.
 	public void putFloat(float f) {
-		this.putInt(GdxQuake2.tools.floatToIntBits(f));
+		this.putInt(NumberUtils.floatToIntBits(f));
 	}
 
     public float getFloat() {
 	    int n = getInt();
-		return GdxQuake2.tools.intBitsToFloat(n);
+		return NumberUtils.intBitsToFloat(n);
 	}
 
     public int getInt() {
