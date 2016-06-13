@@ -1,6 +1,5 @@
 package com.googlecode.gdxquake2;
 
-import com.badlogic.gdx.Application;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
@@ -15,26 +14,28 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.TimeUtils;
-import com.googlecode.gdxquake2.core.id.sound.ALSoundImpl;
-import com.googlecode.gdxquake2.core.gl11.GL11Emulation;
-import com.googlecode.gdxquake2.core.id.client.Dimension;
-import com.googlecode.gdxquake2.core.id.client.Screen;
-import com.googlecode.gdxquake2.core.id.common.ConsoleVariables;
-import com.googlecode.gdxquake2.core.id.common.Globals;
-import com.googlecode.gdxquake2.core.id.common.QuakeCommon;
-import com.googlecode.gdxquake2.core.id.common.ResourceLoader;
-import com.googlecode.gdxquake2.core.id.render.GlRenderer;
-import com.googlecode.gdxquake2.core.id.sound.Sound;
-import com.googlecode.gdxquake2.core.installer.Installer;
-import com.googlecode.gdxquake2.core.tools.Callback;
-import com.googlecode.gdxquake2.core.tools.PlatformTools;
-import com.googlecode.gdxquake2.core.tools.ResourceLoaderImpl;
+import com.googlecode.gdxquake2.game.sound.ALSoundImpl;
+import com.googlecode.gdxquake2.gl11.GL11Emulation;
+import com.googlecode.gdxquake2.game.client.Dimension;
+import com.googlecode.gdxquake2.game.client.Screen;
+import com.googlecode.gdxquake2.game.common.ConsoleVariables;
+import com.googlecode.gdxquake2.game.common.Globals;
+import com.googlecode.gdxquake2.game.common.QuakeCommon;
+import com.googlecode.gdxquake2.game.common.ResourceLoader;
+import com.googlecode.gdxquake2.game.render.GlRenderer;
+import com.googlecode.gdxquake2.game.sound.Sound;
+import com.googlecode.gdxquake2.installer.Installer;
+import com.googlecode.gdxquake2.game.gdxadapter.ResourceLoaderImpl;
+import com.googlecode.gdxquake2.gdxext.AsyncLocalStorage;
+import com.googlecode.gdxquake2.gdxext.Callback;
 
 public class GdxQuake2 extends ApplicationAdapter {
 	static final String DOWNLOAD_COMPLETE = "downloadComplete";
+	public static final String PATH_PREFIX = ".q2data/";
 
 	public static PlatformTools tools;
 	public static Preferences imageSizes;
+	public static AsyncLocalStorage asyncLocalStorage;
 
 	private static Preferences state;
 	private static Label statusLabel;
@@ -49,7 +50,7 @@ public class GdxQuake2 extends ApplicationAdapter {
 
 	@Override
 	public void create () {
-		Gdx.app.setLogLevel(Application.LOG_DEBUG);
+		asyncLocalStorage = new AsyncLocalStorage();
 
 		imageSizes = Gdx.app.getPreferences("q2gdx-imageSizes");
 		state = Gdx.app.getPreferences("q2gdx-state");

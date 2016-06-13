@@ -4,8 +4,7 @@ import java.nio.ByteBuffer;
 
 import com.badlogic.gdx.Gdx;
 import com.google.gwt.core.client.JavaScriptObject;
-import com.googlecode.gdxquake2.core.tools.AsyncBlobStorage;
-import com.googlecode.gdxquake2.core.tools.Callback;
+import com.googlecode.gdxquake2.gdxext.Callback;
 
 public class GwtAsyncBlobStorage implements AsyncBlobStorage {
 

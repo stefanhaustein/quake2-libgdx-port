@@ -4,14 +4,12 @@ import android.os.Bundle;
 
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
-import com.googlecode.gdxquake2.GdxQuake2;
-import com.googlecode.gdxquake2.android.DesktopTools;
 
 public class AndroidLauncher extends AndroidApplication {
 	@Override
 	protected void onCreate (Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		AndroidApplicationConfiguration config = new AndroidApplicationConfiguration();
-		initialize(new GdxQuake2(new DesktopTools()), config);
+		initialize(new GdxQuake2(new AndroidTools()), config);
 	}
 }
