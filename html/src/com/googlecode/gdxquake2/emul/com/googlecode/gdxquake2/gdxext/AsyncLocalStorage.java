@@ -2,10 +2,15 @@ package com.googlecode.gdxquake2.gdxext;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.HasArrayBufferView;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.utils.BufferUtils;
 import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.typedarrays.shared.ArrayBuffer;
+import com.google.gwt.typedarrays.shared.ArrayBufferView;
+import com.google.gwt.typedarrays.shared.TypedArrays;
 import com.googlecode.gdxquake2.GdxQuake2;
 import com.googlecode.gdxquake2.gdxext.*;
 
@@ -48,10 +53,24 @@ public class AsyncLocalStorage {
   void saveFileHandleImpl(final AsyncFileHandle fileHandle, final Callback<Void> readyCallback) {
     GdxQuake2.tools.log("saveFileHandle: " + fileHandle.path);
     if (db != null) {
-      saveFileImpl(fileHandle.path(), fileHandle.data, readyCallback);
+      ByteBuffer data = fileHandle.data;
+      if (!(data instanceof HasArrayBufferView)) {
+        ByteBuffer b2 = BufferUtils.newByteBuffer(data.capacity());
+        b2.put(data);
+        data = b2;
+      }
+      ArrayBufferView arrayBuffer = ((HasArrayBufferView) data).getTypedArray();
+      saveFileImpl(fileHandle.path(), arrayBuffer, new Runnable() {
+        @Override
+        public void run() {
+          GdxQuake2.tools.log("Actually seem to have managed to save file: " + fileHandle.path());
+          readyCallback.onSuccess(null);
+        }
+      });
     } else if (error) {
       readyCallback.onFailure(new IOException("Database intialization failure"));
     } else {
+
       Gdx.app.postRunnable(new Runnable() {
           @Override
           public void run() {
@@ -61,9 +80,17 @@ public class AsyncLocalStorage {
     }
   }
 
-  private native void saveFileImpl(String path, ByteBuffer data, Callback<Void> readyCallback) /*-{
+  private native void saveFileImpl(String path, ArrayBufferView data, Runnable callback) /*-{
     var db = this.@com.googlecode.gdxquake2.gdxext.AsyncLocalStorage::db;
-    $wnd.console.log("Should save a file here: " + path);
+    var trans = db.transaction(["blobs"], "readwrite");
+    trans.oncomplete = function() {
+      callback.@java.lang.Runnable::run()();
+    }
+    trans.onerror = function() {
+      $wnd.console.log("Transaction error");
+    }
+    var objectStore = trans.objectStore("blobs");
+    objectStore.put(data, path);
   }-*/;
 
 
