@@ -3,13 +3,7 @@ package com.googlecode.gdxquake2.client;
 import com.googlecode.gdxquake2.GdxQuake2;
 import com.googlecode.gdxquake2.PlatformTools;
 
-public class GwtTools extends PlatformTools {
-  GwtAsyncBlobStorage asyncBlobStorage = new GwtAsyncBlobStorage();
-
-  @Override
-  public AsyncBlobStorage asyncBlobStorage() {
-    return asyncBlobStorage;
-  }
+public class GwtTools implements PlatformTools {
 
   @Override
   public native void log(String s) /*-{

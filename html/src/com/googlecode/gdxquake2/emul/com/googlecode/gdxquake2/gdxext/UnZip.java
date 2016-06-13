@@ -1,12 +1,11 @@
-package com.googlecode.gdxquake2.emul.com.googlecode.gdxquake2.gdxext;
+package com.googlecode.gdxquake2.gdxext;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.BufferUtils;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
 import com.google.gwt.typedarrays.shared.Uint8Array;
-import com.googlecode.gdxquake2.gdxext.Callback;
-import com.googlecode.gdxquake2.gdxext.ZipEntry;
+import com.googlecode.gdxquake2.GdxQuake2;
 
 import java.nio.ByteBuffer;
 import java.nio.HasArrayBufferView;
@@ -24,7 +23,7 @@ public class UnZip implements Runnable {
     private String currentName;
     private ByteBuffer currentBuffer;
 
-    UnZip(String url, Callback<ZipEntry> dataCallback, Callback<Void> doneCallback) {
+    public UnZip(String url, Callback<ZipEntry> dataCallback, Callback<Void> doneCallback) {
         this.url = url;
         this.dataCallback = dataCallback;
         this.doneCallback = doneCallback;
@@ -83,12 +82,15 @@ public class UnZip implements Runnable {
     }-*/;
 
     private Uint8Array createBuffer(int size) {
+        GdxQuake2.tools.log("createbuffer " + size);
         currentBuffer = BufferUtils.newByteBuffer(size);
         return (Uint8Array) ((HasArrayBufferView) currentBuffer).getTypedArray();
     }
 
     private void entryAvailable() {
+        GdxQuake2.tools.log("entryAvailable " + currentName + "; calling onsuccess");
         dataCallback.onSuccess(new ZipEntry(currentName, currentBuffer));
+        GdxQuake2.tools.log("back from onSuccess");
         currentName = null;
         currentBuffer = null;
         postSelf();
