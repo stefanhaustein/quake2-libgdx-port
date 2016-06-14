@@ -2,7 +2,6 @@ package com.googlecode.gdxquake2.gdxext;
 
 import com.badlogic.gdx.Gdx;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 /**
@@ -13,9 +12,12 @@ public class AsyncLocalStorage {
      * Creates a new empty file.
      */
     public AsyncFileHandle createFileHandle(final String path) {
-        AsyncFileHandle result = new AsyncFileHandle(path);
-        result.delete();
-        return result;
+        try {
+            AsyncFileHandle result = new AsyncFileHandle(path, true);
+            return result;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -25,13 +27,11 @@ public class AsyncLocalStorage {
         Gdx.app.postRunnable(new Runnable() {
             @Override
             public void run() {
-                AsyncFileHandle fileHandle = new AsyncFileHandle(path);
-                if (!fileHandle.exists()) {
-                    callback.onFailure(new FileNotFoundException(path));
-                } else if (fileHandle.isDirectory()) {
-                    callback.onFailure(new IOException("path is directory: " + path));
-                } else {
-                    callback.onSuccess(new AsyncFileHandle(path));
+                try {
+                    AsyncFileHandle fileHandle = new AsyncFileHandle(path, false);
+                    callback.onSuccess(fileHandle);
+                } catch (IOException e) {
+                    callback.onFailure(e);
                 }
             }
         });

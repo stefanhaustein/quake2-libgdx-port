@@ -90,7 +90,7 @@ public class Installer implements Runnable {
           GdxQuake2.showInitStatus("Skipping: " + path);
         } else {
           GdxQuake2.showInitStatus("Extracting: " + path);
-          AsyncFileHandle fileHandle = GdxQuake2.asyncLocalStorage.createFileHandle(GdxQuake2.PATH_PREFIX + path);
+          AsyncFileHandle fileHandle = GdxQuake2.asyncLocalStorage.createFileHandle(path);
           fileHandle.addCommitListener((Callback<AsyncFileHandle>) await());
           fileHandle.writeBuffer(data, false);
         }
@@ -124,7 +124,7 @@ public class Installer implements Runnable {
   void convert(String path, final ImageConverter converter, ByteBuffer data) {
     Pixmap image = converter.convert(data);
     GdxQuake2.imageSizes.putInteger(path, image.getWidth() * 10000 + image.getHeight());
-    AsyncFileHandle fileHandle = GdxQuake2.asyncLocalStorage.createFileHandle(GdxQuake2.PATH_PREFIX + path + ".png");
+    AsyncFileHandle fileHandle = GdxQuake2.asyncLocalStorage.createFileHandle(path + ".png");
     fileHandle.addCommitListener((Callback<AsyncFileHandle>) await());
     PixmapIO.writePNG(fileHandle, image);
   }

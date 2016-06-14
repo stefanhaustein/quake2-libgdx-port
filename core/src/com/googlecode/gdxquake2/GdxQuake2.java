@@ -31,7 +31,6 @@ import com.googlecode.gdxquake2.gdxext.Callback;
 
 public class GdxQuake2 extends ApplicationAdapter {
 	static final String DOWNLOAD_COMPLETE = "downloadComplete";
-	public static final String PATH_PREFIX = ".q2data/";
 
 	public static PlatformTools tools;
 	public static Preferences imageSizes;
@@ -55,7 +54,7 @@ public class GdxQuake2 extends ApplicationAdapter {
 		imageSizes = Gdx.app.getPreferences("q2gdx-imageSizes");
 		state = Gdx.app.getPreferences("q2gdx-state");
 
-		if (state.getBoolean(DOWNLOAD_COMPLETE, false)) {
+		if ("".equals(state.getBoolean(DOWNLOAD_COMPLETE, false))) {
 			initGame();
 		} else {
 			showInstaller();

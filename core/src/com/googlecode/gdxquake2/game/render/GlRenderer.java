@@ -942,7 +942,7 @@ public class GlRenderer implements Renderer {
     pendingImages.add(image);
     image.ready = false;
 
-    GdxQuake2.asyncLocalStorage.getFileHandle(GdxQuake2.PATH_PREFIX + name.toLowerCase() + ".png", new Callback<AsyncFileHandle>() {
+    GdxQuake2.asyncLocalStorage.getFileHandle(name.toLowerCase() + ".png", new Callback<AsyncFileHandle>() {
       @Override
       public void onSuccess(AsyncFileHandle result) {
         // Image was recycled in the meantime.

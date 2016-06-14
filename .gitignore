@@ -70,8 +70,7 @@ build/
 Thumbs.db
 
 
-## Jake, AsyncBlobStorage
+## Jake, local storage
 
-.blobStorage
+.asyncLocalStorage
 .jake2
-.q2data

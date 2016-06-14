@@ -2,26 +2,35 @@ package com.googlecode.gdxquake2.gdxext;
 
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.files.FileHandleStream;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 /**
  * A file handle that provides commit notifications.
+ * Use AsyncLocalStorage to create and access files.
  */
-public class AsyncFileHandle extends FileHandle {
+public class AsyncFileHandle extends FileHandleStream {
     ArrayList<Callback<AsyncFileHandle>> commitListener = new ArrayList<Callback<AsyncFileHandle>>();
+    private File file;
 
     /**
      * Package local -- use AsyncLocalStorage for instantiation.
      */
-    AsyncFileHandle(String path) {
-        super(path, Files.FileType.Local);
+    AsyncFileHandle(String path, boolean create) throws IOException {
+        super(path);
+        this.file = new File(".asyncLocalStorage", path);
+        if (create) {
+            file.delete();
+        } else {
+            if (!file.exists()) {
+                throw new FileNotFoundException(path);
+            } else if (file.isDirectory()) {
+                throw new IOException("Regular file expected, got a directory: " + path);
+            }
+        }
     }
 
     /**
@@ -29,6 +38,10 @@ public class AsyncFileHandle extends FileHandle {
      */
     public void addCommitListener(Callback<AsyncFileHandle> listener) {
         commitListener.add(listener);
+    }
+
+    public boolean exists() {
+        return file.exists();
     }
 
     public void writeBuffer(ByteBuffer buffer, boolean append) {
@@ -58,10 +71,8 @@ public class AsyncFileHandle extends FileHandle {
 
     public OutputStream write(boolean append) {
         try {
-            if (file().getParentFile() != null) {
-                file().getParentFile().mkdirs();
-            }
-            return new FileOutputStream(file(), append) {
+            file.getParentFile().mkdirs();
+            return new FileOutputStream(file, append) {
                 private boolean closed;
                 public void close() throws IOException {
                     super.close();
@@ -81,6 +92,14 @@ public class AsyncFileHandle extends FileHandle {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public InputStream read() {
+       try {
+           return new FileInputStream(file);
+       } catch (IOException e) {
+           throw new RuntimeException(e);
+       }
     }
 
 }

@@ -98,7 +98,7 @@ public class GdxALAdapter extends ALAdapter {
       this.location = location;
       sound = null;
 
-      GdxQuake2.asyncLocalStorage.getFileHandle(GdxQuake2.PATH_PREFIX + location.toLowerCase(), new Callback<AsyncFileHandle>() {
+      GdxQuake2.asyncLocalStorage.getFileHandle(location.toLowerCase(), new Callback<AsyncFileHandle>() {
         @Override
         public void onSuccess(AsyncFileHandle fileHandle) {
           sound = Gdx.audio.newSound(fileHandle); //GdxQuake2.tools.decodeWav(data);

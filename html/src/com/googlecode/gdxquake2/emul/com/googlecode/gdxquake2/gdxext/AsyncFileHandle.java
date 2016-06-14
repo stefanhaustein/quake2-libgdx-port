@@ -2,6 +2,7 @@ package com.googlecode.gdxquake2.gdxext;
 
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.files.FileHandleStream;
 import com.googlecode.gdxquake2.GdxQuake2;
 
 import java.io.ByteArrayOutputStream;
@@ -11,14 +12,14 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
-public class AsyncFileHandle extends FileHandle {
+public class AsyncFileHandle extends FileHandleStream {
     ArrayList<Callback<AsyncFileHandle>> commitListener = new ArrayList<Callback<AsyncFileHandle>>();
     ByteBuffer data;
     AsyncLocalStorage owner;
     String path;
 
     AsyncFileHandle(AsyncLocalStorage owner, String path) {
-        super(path, Files.FileType.Local);
+        super(path);
         this.owner = owner;
         this.path = path;
     }
