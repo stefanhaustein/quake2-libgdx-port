@@ -11,6 +11,7 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.typedarrays.shared.ArrayBuffer;
 import com.google.gwt.typedarrays.shared.ArrayBufferView;
 import com.google.gwt.typedarrays.shared.TypedArrays;
+import com.google.gwt.typedarrays.shared.Uint8Array;
 import com.googlecode.gdxquake2.GdxQuake2;
 import com.googlecode.gdxquake2.gdxext.*;
 
@@ -93,8 +94,39 @@ public class AsyncLocalStorage {
     objectStore.put(data, path);
   }-*/;
 
+  public void getFileHandle(final String path, final Callback<AsyncFileHandle> callback) {
+    getFileHandleImpl(path, new Callback<ArrayBufferView>() {
+      @Override
+      public void onSuccess(ArrayBufferView result) {
+        // TODO(haustein): Add a way to wrap an ArrayBuffer w/o copy.
+        ByteBuffer buffer = BufferUtils.newByteBuffer(result.byteLength());
+        ArrayBufferView wrapped = ((HasArrayBufferView) buffer).getTypedArray();
+        ((Uint8Array) wrapped.buffer()).set((Uint8Array) result.buffer());
 
-  public void getFileHandle(String path, Callback<AsyncFileHandle> callback) {
+        AsyncFileHandle fileHandle = new AsyncFileHandle(AsyncLocalStorage.this, path);
+        fileHandle.data = buffer;
+        callback.onSuccess(fileHandle);
+      }
 
+      @Override
+      public void onFailure(Throwable cause) {
+        // Throwable will be null from JS
+        callback.onFailure(new IOException("IDB read error"));
+      }
+    });
   }
+
+  public native void getFileHandleImpl(String path, Callback<ArrayBufferView> callback) /*-{
+    var db = this.@com.googlecode.gdxquake2.gdxext.AsyncLocalStorage::db;
+    var trans = db.transaction(["blobs"], "readonly");
+    var objectStore = trans.objectStore("blobs");
+    var request = objectStore.get(path);
+    trans.onsuccess = function(event) {
+       var result = request.result;
+       callback.@com.googlecode.gdxquake2.gdxext.Callback::onSuccess(Ljava/lang/Object;)(result);
+    }
+    trans.onerror = function() {
+      $wnd.console.log("Transaction error");
+    }
+  }-*/;
 }

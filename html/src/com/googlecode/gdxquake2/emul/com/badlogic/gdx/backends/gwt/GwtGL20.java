@@ -29,6 +29,8 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.core.client.JsArray;
 import com.google.gwt.typedarrays.client.Uint8ArrayNative;
 import com.google.gwt.typedarrays.shared.Float32Array;
 import com.google.gwt.typedarrays.shared.Int16Array;
@@ -47,19 +49,39 @@ import com.google.gwt.webgl.client.WebGLTexture;
 import com.google.gwt.webgl.client.WebGLUniformLocation;
 
 public class GwtGL20 implements GL20 {
-	final Map<Integer, WebGLProgram> programs = new HashMap<Integer, WebGLProgram>();
+
+	static final class IntMap<T extends JavaScriptObject> extends JsArray<T> {
+
+		protected IntMap() {
+			super();
+		}
+
+		public static native <T extends JavaScriptObject> IntMap<T> create() /*-{
+			return [];
+		}-*/;
+
+		public native void put(int key, T value) /*-{
+			this[key] = value;
+		}-*/;
+
+		public native void remove(int key) /*-{
+			delete this[key];
+		}-*/;
+	}
+
+	final IntMap<WebGLProgram> programs = IntMap.create();
 	int nextProgramId = 1;
-	final Map<Integer, WebGLShader> shaders = new HashMap<Integer, WebGLShader>();
+	final IntMap<WebGLShader> shaders = IntMap.create();
 	int nextShaderId = 1;
-	final Map<Integer, WebGLBuffer> buffers = new HashMap<Integer, WebGLBuffer>();
+	final IntMap<WebGLBuffer> buffers = IntMap.create();
 	int nextBufferId = 1;
-	final Map<Integer, WebGLFramebuffer> frameBuffers = new HashMap<Integer, WebGLFramebuffer>();
+	final IntMap<WebGLFramebuffer> frameBuffers = IntMap.create();
 	int nextFrameBufferId = 1;
-	final Map<Integer, WebGLRenderbuffer> renderBuffers = new HashMap<Integer, WebGLRenderbuffer>();
+	final IntMap<WebGLRenderbuffer> renderBuffers = IntMap.create();
 	int nextRenderBufferId = 1;
-	final Map<Integer, WebGLTexture> textures = new HashMap<Integer, WebGLTexture>();
+	final IntMap<WebGLTexture> textures = IntMap.create();
 	int nextTextureId = 1;
-	final Map<Integer, Map<Integer, WebGLUniformLocation>> uniforms = new HashMap<Integer, Map<Integer, WebGLUniformLocation>>();
+	final IntMap<IntMap<WebGLUniformLocation>> uniforms = IntMap.create();
 	int nextUniformId = 1;
 	int currProgram = 0;
 
@@ -77,7 +99,7 @@ public class GwtGL20 implements GL20 {
 
 	private int allocateBufferId (WebGLBuffer buffer) {
 		int id = nextBufferId++;
-		buffers.put(id, buffer);
+		buffers.set(id, buffer);
 		return id;
 	}
 
@@ -112,10 +134,10 @@ public class GwtGL20 implements GL20 {
 	}
 
 	private int allocateUniformLocationId (int program, WebGLUniformLocation location) {
-		Map<Integer, WebGLUniformLocation> progUniforms = uniforms.get(program);
+		IntMap<WebGLUniformLocation> progUniforms = uniforms.get(program);
 		if (progUniforms == null) {
-			progUniforms = new HashMap<Integer, WebGLUniformLocation>();
-			uniforms.put(program, progUniforms);
+			progUniforms = IntMap.create();
+			uniforms.set(program, progUniforms);
 		}
 		// FIXME check if uniform already stored.
 		int id = nextUniformId++;
