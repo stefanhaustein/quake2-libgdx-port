@@ -1,7 +1,4 @@
-package com.googlecode.gdxquake2.emul.java.io;
-
-import java.io.IOException;
-import java.io.OutputStream;
+package java.io;
 
 /**
  * Created by haustein on 14.06.16.

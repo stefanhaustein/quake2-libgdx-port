@@ -48,42 +48,85 @@ import com.google.gwt.webgl.client.WebGLShader;
 import com.google.gwt.webgl.client.WebGLTexture;
 import com.google.gwt.webgl.client.WebGLUniformLocation;
 
+import static com.google.gwt.webgl.client.WebGLRenderingContext.ARRAY_BUFFER;
+import static com.google.gwt.webgl.client.WebGLRenderingContext.BYTE;
+import static com.google.gwt.webgl.client.WebGLRenderingContext.COMPILE_STATUS;
+import static com.google.gwt.webgl.client.WebGLRenderingContext.ELEMENT_ARRAY_BUFFER;
+import static com.google.gwt.webgl.client.WebGLRenderingContext.FLOAT;
+import static com.google.gwt.webgl.client.WebGLRenderingContext.INT;
+import static com.google.gwt.webgl.client.WebGLRenderingContext.LINK_STATUS;
+import static com.google.gwt.webgl.client.WebGLRenderingContext.ONE;
+import static com.google.gwt.webgl.client.WebGLRenderingContext.SHORT;
+import static com.google.gwt.webgl.client.WebGLRenderingContext.STREAM_DRAW;
+import static com.google.gwt.webgl.client.WebGLRenderingContext.UNPACK_PREMULTIPLY_ALPHA_WEBGL;
+import static com.google.gwt.webgl.client.WebGLRenderingContext.UNSIGNED_BYTE;
+import static com.google.gwt.webgl.client.WebGLRenderingContext.UNSIGNED_SHORT;
+
 public class GwtGL20 implements GL20 {
 
-	static final class IntMap<T extends JavaScriptObject> extends JsArray<T> {
+  static class VertexAttribArrayState {
+    int type;
+    int size;
+    int stride;
+    boolean normalize;
+    Buffer nioBuffer;
+    int nioBufferPosition;
+    int nioBufferLimit;
+    WebGLBuffer webGlBuffer;
+  }
+	static final class IntMap<T extends JavaScriptObject> extends JavaScriptObject {
 
 		protected IntMap() {
 			super();
 		}
 
 		public static native <T extends JavaScriptObject> IntMap<T> create() /*-{
-			return [];
+			return [undefined];
+		}-*/;
+
+		public native T get(int key) /*-{
+			return this[key];
 		}-*/;
 
 		public native void put(int key, T value) /*-{
 			this[key] = value;
 		}-*/;
 
-		public native void remove(int key) /*-{
+		public native int add(T value) /*-{
+			this.push(value);
+			return this.length - 1;
+		}-*/;
+
+		public native T remove(int key) /*-{
+			var value = this[key];
 			delete this[key];
+			return value;
 		}-*/;
 	}
 
+	static final int VERTEX_ATTRIB_ARRAY_COUNT = 5; //  position, color, texture0, texture1, normals
+
 	final IntMap<WebGLProgram> programs = IntMap.create();
-	int nextProgramId = 1;
 	final IntMap<WebGLShader> shaders = IntMap.create();
-	int nextShaderId = 1;
 	final IntMap<WebGLBuffer> buffers = IntMap.create();
-	int nextBufferId = 1;
 	final IntMap<WebGLFramebuffer> frameBuffers = IntMap.create();
-	int nextFrameBufferId = 1;
 	final IntMap<WebGLRenderbuffer> renderBuffers = IntMap.create();
-	int nextRenderBufferId = 1;
 	final IntMap<WebGLTexture> textures = IntMap.create();
-	int nextTextureId = 1;
 	final IntMap<IntMap<WebGLUniformLocation>> uniforms = IntMap.create();
-	int nextUniformId = 1;
 	int currProgram = 0;
+
+  private int enabledArrays = 0;
+  private int previouslyEnabledArrays = 0;
+  private int useNioBuffer = 0;
+
+  private VertexAttribArrayState[] vertexAttribArrayState =
+    new VertexAttribArrayState[VERTEX_ATTRIB_ARRAY_COUNT];
+
+  private WebGLBuffer elementBuffer;
+  private WebGLBuffer boundArrayBuffer;
+  private WebGLBuffer requestedArrayBuffer;
+  private WebGLBuffer boundElementArrayBuffer;
+  private WebGLBuffer requestedElementArrayBuffer;
 
 	Float32Array floatBuffer = TypedArrays.createFloat32Array(2000 * 20);
 	Int32Array intBuffer = TypedArrays.createInt32Array(2000 * 6);
@@ -95,54 +138,14 @@ public class GwtGL20 implements GL20 {
 	protected GwtGL20 (WebGLRenderingContext gl) {
 		this.gl = gl;
 		this.gl.pixelStorei(WebGLRenderingContext.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 0);
-	}
 
-	private int allocateBufferId (WebGLBuffer buffer) {
-		int id = nextBufferId++;
-		buffers.set(id, buffer);
-		return id;
-	}
+    elementBuffer = gl.createBuffer();
 
-	private int allocateFrameBufferId (WebGLFramebuffer frameBuffer) {
-		int id = nextBufferId++;
-		frameBuffers.put(id, frameBuffer);
-		return id;
-	}
-
-	private int allocateProgramId (WebGLProgram program) {
-		int id = nextProgramId++;
-		programs.put(id, program);
-		return id;
-	}
-
-	private int allocateRenderBufferId (WebGLRenderbuffer renderBuffer) {
-		int id = nextRenderBufferId++;
-		renderBuffers.put(id, renderBuffer);
-		return id;
-	}
-
-	private int allocateShaderId (WebGLShader shader) {
-		int id = nextShaderId++;
-		shaders.put(id, shader);
-		return id;
-	}
-
-	private int allocateTextureId (WebGLTexture texture) {
-		int id = nextTextureId++;
-		textures.put(id, texture);
-		return id;
-	}
-
-	private int allocateUniformLocationId (int program, WebGLUniformLocation location) {
-		IntMap<WebGLUniformLocation> progUniforms = uniforms.get(program);
-		if (progUniforms == null) {
-			progUniforms = IntMap.create();
-			uniforms.set(program, progUniforms);
-		}
-		// FIXME check if uniform already stored.
-		int id = nextUniformId++;
-		progUniforms.put(id, location);
-		return id;
+    for (int ii = 0; ii < VERTEX_ATTRIB_ARRAY_COUNT; ii++) {
+      VertexAttribArrayState data = new VertexAttribArrayState();
+      data.webGlBuffer = gl.createBuffer();
+      vertexAttribArrayState[ii] = data;
+    }
 	}
 
 	public Float32Array copy (FloatBuffer buffer) {
@@ -180,30 +183,6 @@ public class GwtGL20 implements GL20 {
 			return intBuffer.subarray(0, buffer.remaining());
 		}
 	}
-	private void deallocateProgramId (int id) {
-		uniforms.remove(id);
-		programs.remove(id);
-	}
-
-	private void deallocateBufferId (int id) {
-		buffers.remove(id);
-	}
-
-	private void deallocateShaderId (int id) {
-		shaders.remove(id);
-	}
-
-	private void deallocateFrameBufferId (int id) {
-		frameBuffers.remove(id);
-	}
-
-	private void deallocateRenderBufferId (int id) {
-		renderBuffers.remove(id);
-	}
-
-	private void deallocateTextureId (int id) {
-		textures.remove(id);
-	}
 
 	private void ensureCapacity (FloatBuffer buffer) {
 		if (buffer.remaining() > floatBuffer.length()) {
@@ -223,10 +202,133 @@ public class GwtGL20 implements GL20 {
 		}
 	}
 
+  private static int getElementSize(Buffer buffer) {
+    if ((buffer instanceof FloatBuffer) || (buffer instanceof IntBuffer)) return 4;
+    else if (buffer instanceof ShortBuffer) return 2;
+    else if (buffer instanceof ByteBuffer) return 1;
+    else throw new RuntimeException("Unrecognized buffer type: " + buffer.getClass());
+  }
+
+  /**
+   * Returns the typed array of the given native buffer. Set byteSize to -1 to use remaining().
+   */
+  private ArrayBufferView getTypedArray(Buffer buffer, int type, int byteSize) {
+    if (!(buffer instanceof HasArrayBufferView)) {
+      throw new RuntimeException("Native buffer required " + buffer);
+    }
+    HasArrayBufferView arrayHolder = (HasArrayBufferView) buffer;
+    int bufferElementSize = arrayHolder.getElementSize();
+
+    ArrayBufferView webGLArray = arrayHolder.getTypedArray();
+    if (byteSize == -1) {
+      byteSize = buffer.remaining() * bufferElementSize;
+    }
+    if (byteSize == buffer.capacity() * bufferElementSize && // type == arrayHolder.getElementType()) {
+			false && getTypeSize(type) == arrayHolder.getElementSize()) {  // HACK
+      return webGLArray;
+    }
+
+    int byteOffset = webGLArray.byteOffset() + buffer.position() * bufferElementSize;
+
+    switch (type) {
+      case FLOAT:
+        return TypedArrays.createFloat32Array(webGLArray.buffer(), byteOffset, byteSize / 4);
+      case UNSIGNED_BYTE:
+        return TypedArrays.createUint8Array(webGLArray.buffer(), byteOffset, byteSize);
+      case UNSIGNED_SHORT:
+        return TypedArrays.createUint16Array(webGLArray.buffer(), byteOffset, byteSize / 2);
+      case INT:
+        return TypedArrays.createInt32Array(webGLArray.buffer(), byteOffset, byteSize / 4);
+      case SHORT:
+        return TypedArrays.createInt16Array(webGLArray.buffer(), byteOffset, byteSize / 2);
+      case BYTE:
+        return TypedArrays.createInt8Array(webGLArray.buffer(), byteOffset, byteSize);
+      default:
+        throw new IllegalArgumentException("Type: " + type);
+    }
+  }
+
+  private int getTypeSize(int type) {
+    switch(type) {
+      case GL_FLOAT:
+      case GL_INT:
+        return 4;
+      case GL_SHORT:
+      case GL_UNSIGNED_SHORT:
+        return 2;
+      case GL_BYTE:
+      case GL_UNSIGNED_BYTE:
+        return 1;
+      default:
+        throw new IllegalArgumentException();
+    }
+  }
+
 	private WebGLUniformLocation getUniformLocation (int location) {
 		return uniforms.get(currProgram).get(location);
 	}
 
+  /**
+   * The content of non-VBO buffers may be changed between the glVertexAttribPointer call
+   * and the glDrawXxx call. Thus, we need to defer copying them to a VBO buffer until just
+   * before the actual glDrawXxx call.
+   */
+  protected void prepareDraw() {
+    VertexAttribArrayState previousNio = null;
+    int previousElementSize = 0;
+
+    if (useNioBuffer == 0 && enabledArrays == previouslyEnabledArrays) {
+      return;
+    }
+
+    for(int i = 0; i < VERTEX_ATTRIB_ARRAY_COUNT; i++) {
+      int mask = 1 << i;
+      int enabled = enabledArrays & mask;
+      if (enabled != (previouslyEnabledArrays & mask)) {
+        if (enabled != 0) {
+          gl.enableVertexAttribArray(i);
+        } else {
+          gl.disableVertexAttribArray(i);
+        }
+      }
+      if (enabled != 0 && (useNioBuffer & mask) != 0) {
+        VertexAttribArrayState data = vertexAttribArrayState[i];
+        if (previousNio != null && previousNio.nioBuffer == data.nioBuffer &&
+            previousNio.nioBufferLimit >= data.nioBufferLimit) {
+          if (boundArrayBuffer != previousNio.webGlBuffer) {
+            gl.bindBuffer(ARRAY_BUFFER, previousNio.webGlBuffer);
+            boundArrayBuffer = data.webGlBuffer;
+          }
+          gl.vertexAttribPointer(i, data.size, data.type, data.normalize, data.stride,
+                                 data.nioBufferPosition * previousElementSize);
+        } else {
+          if (boundArrayBuffer != data.webGlBuffer) {
+            gl.bindBuffer(ARRAY_BUFFER, data.webGlBuffer);
+            boundArrayBuffer = data.webGlBuffer;
+          }
+          int elementSize = getElementSize(data.nioBuffer);
+          int savePosition = data.nioBuffer.position();
+          if (data.nioBufferPosition * elementSize < data.stride) {
+            data.nioBuffer.position(0);
+            gl.bufferData(ARRAY_BUFFER, getTypedArray(data.nioBuffer, data.type, data.nioBufferLimit *
+                                                      elementSize), STREAM_DRAW);
+            gl.vertexAttribPointer(i, data.size, data.type, data.normalize, data.stride,
+                                   data.nioBufferPosition * elementSize);
+            previousNio = data;
+            previousElementSize = elementSize;
+          } else {
+            data.nioBuffer.position(data.nioBufferPosition);
+            gl.bufferData(ARRAY_BUFFER, getTypedArray(data.nioBuffer, data.type,
+                                                      (data.nioBufferLimit - data.nioBufferPosition) *
+                                                      elementSize), STREAM_DRAW);
+            gl.vertexAttribPointer(i, data.size, data.type, data.normalize, data.stride, 0);
+          }
+          data.nioBuffer.position(savePosition);
+        }
+      }
+    }
+    previouslyEnabledArrays = enabledArrays;
+  }
 	//
 	//
 	// Public methods. Please keep ordered -----------------------------------------------------------------------------
@@ -253,7 +355,15 @@ public class GwtGL20 implements GL20 {
 
 	@Override
 	public void glBindBuffer (int target, int buffer) {
-		gl.bindBuffer(target, buffers.get(buffer));
+    // Yes, bindBuffer is so expensive that this makes sense..
+    WebGLBuffer webGlBuf = buffers.get(buffer);
+    if (target == GL_ARRAY_BUFFER) {
+      requestedArrayBuffer = webGlBuf;
+    } else if (target == GL_ELEMENT_ARRAY_BUFFER) {
+      requestedElementArrayBuffer = webGlBuf;
+    } else {
+      gl.bindBuffer(target, webGlBuf);
+    }
 	}
 
 	@Override
@@ -297,14 +407,19 @@ public class GwtGL20 implements GL20 {
 	}
 
 	@Override
-	public void glBufferData (int target, int size, Buffer data, int usage) {
-		if (data instanceof FloatBuffer) {
-			gl.bufferData(target, copy((FloatBuffer)data), usage);
-		} else if (data instanceof ShortBuffer) {
-			gl.bufferData(target, copy((ShortBuffer)data), usage);
-		} else {
-			throw new GdxRuntimeException("Can only cope with FloatBuffer and ShortBuffer at the moment");
+  public void glBufferData(int target, int byteSize, Buffer data, int usage) {
+    if (target == GL_ARRAY_BUFFER) {
+      if (requestedArrayBuffer != boundArrayBuffer) {
+        gl.bindBuffer(target, requestedArrayBuffer);
+        boundArrayBuffer = requestedArrayBuffer;
 		}
+    } else if (target == GL_ELEMENT_ARRAY_BUFFER) {
+      if (requestedElementArrayBuffer != boundElementArrayBuffer) {
+        gl.bindBuffer(target, requestedElementArrayBuffer);
+        boundElementArrayBuffer = requestedElementArrayBuffer;
+      }
+    }
+    gl.bufferData(target, getTypedArray(data, GL_BYTE, byteSize), usage);
 	}
 
 	@Override
@@ -379,13 +494,13 @@ public class GwtGL20 implements GL20 {
 	@Override
 	public int glCreateProgram () {
 		WebGLProgram program = gl.createProgram();
-		return allocateProgramId(program);
+		return programs.add(program);
 	}
 
 	@Override
 	public int glCreateShader (int type) {
 		WebGLShader shader = gl.createShader(type);
-		return allocateShaderId(shader);
+		return shaders.add(shader);
 	}
 
 	@Override
@@ -395,8 +510,7 @@ public class GwtGL20 implements GL20 {
 
 	@Override
 	public void glDeleteBuffer (int id) {
-		WebGLBuffer buffer = this.buffers.get(id);
-		deallocateBufferId(id);
+		WebGLBuffer buffer = this.buffers.remove(id);
 		gl.deleteBuffer(buffer);
 	}
 
@@ -404,16 +518,14 @@ public class GwtGL20 implements GL20 {
 	public void glDeleteBuffers (int n, IntBuffer buffers) {
 		for (int i = 0; i < n; i++) {
 			int id = buffers.get();
-			WebGLBuffer buffer = this.buffers.get(id);
-			deallocateBufferId(id);
+			WebGLBuffer buffer = this.buffers.remove(id);
 			gl.deleteBuffer(buffer);
 		}
 	}
 
 	@Override
 	public void glDeleteFramebuffer (int id) {
-		WebGLFramebuffer fb = this.frameBuffers.get(id);
-		deallocateFrameBufferId(id);
+		WebGLFramebuffer fb = this.frameBuffers.remove(id);
 		gl.deleteFramebuffer(fb);
 	}
 
@@ -421,8 +533,7 @@ public class GwtGL20 implements GL20 {
 	public void glDeleteFramebuffers (int n, IntBuffer framebuffers) {
 		for (int i = 0; i < n; i++) {
 			int id = framebuffers.get();
-			WebGLFramebuffer fb = this.frameBuffers.get(id);
-			deallocateFrameBufferId(id);
+			WebGLFramebuffer fb = this.frameBuffers.remove(id);
 			gl.deleteFramebuffer(fb);
 		}
 	}
@@ -430,14 +541,14 @@ public class GwtGL20 implements GL20 {
 	@Override
 	public void glDeleteProgram (int program) {
 		WebGLProgram prog = programs.get(program);
-		deallocateProgramId(program);
+		programs.remove(program);
+		uniforms.remove(program);
 		gl.deleteProgram(prog);
 	}
 
 	@Override
 	public void glDeleteRenderbuffer (int id) {
-		WebGLRenderbuffer rb = this.renderBuffers.get(id);
-		deallocateRenderBufferId(id);
+		WebGLRenderbuffer rb = this.renderBuffers.remove(id);
 		gl.deleteRenderbuffer(rb);
 	}
 
@@ -445,23 +556,20 @@ public class GwtGL20 implements GL20 {
 	public void glDeleteRenderbuffers (int n, IntBuffer renderbuffers) {
 		for (int i = 0; i < n; i++) {
 			int id = renderbuffers.get();
-			WebGLRenderbuffer rb = this.renderBuffers.get(id);
-			deallocateRenderBufferId(id);
+			WebGLRenderbuffer rb = this.renderBuffers.remove(id);
 			gl.deleteRenderbuffer(rb);
 		}
 	}
 
 	@Override
 	public void glDeleteShader (int shader) {
-		WebGLShader sh = shaders.get(shader);
-		deallocateShaderId(shader);
+		WebGLShader sh = shaders.remove(shader);
 		gl.deleteShader(sh);
 	}
 
 	@Override
 	public void glDeleteTexture (int id) {
-		WebGLTexture texture = this.textures.get(id);
-		deallocateTextureId(id);
+		WebGLTexture texture = this.textures.remove(id);
 		gl.deleteTexture(texture);
 	}
 
@@ -469,8 +577,7 @@ public class GwtGL20 implements GL20 {
 	public void glDeleteTextures (int n, IntBuffer textures) {
 		for (int i = 0; i < n; i++) {
 			int id = textures.get();
-			WebGLTexture texture = this.textures.get(id);
-			deallocateTextureId(id);
+			WebGLTexture texture = this.textures.remove(id);
 			gl.deleteTexture(texture);
 		}
 	}
@@ -502,21 +609,38 @@ public class GwtGL20 implements GL20 {
 
 	@Override
 	public void glDisableVertexAttribArray (int index) {
-		gl.disableVertexAttribArray(index);
+    enabledArrays &= ~(1 << index);
 	}
 
 	@Override
 	public void glDrawArrays (int mode, int first, int count) {
+    prepareDraw();
 		gl.drawArrays(mode, first, count);
 	}
 
 	@Override
 	public void glDrawElements (int mode, int count, int type, Buffer indices) {
-		gl.drawElements(mode, count, type, indices.position()); // FIXME this is assuming WebGL supports client side buffers...
+    prepareDraw();
+    if (boundElementArrayBuffer != elementBuffer) {
+      gl.bindBuffer(ELEMENT_ARRAY_BUFFER, elementBuffer);
+      boundElementArrayBuffer = elementBuffer;
 	}
+    gl.bufferData(ELEMENT_ARRAY_BUFFER, getTypedArray(indices, type, count * getTypeSize(type)),
+                  STREAM_DRAW);
+//    if ("ModelPart".equals(debugInfo)) {
+//      HtmlPlatform.log.info("drawElements f. ModelPart; count: " + count);
+//    }
+    gl.drawElements(mode, count, type, 0);
+  }
+
 
 	@Override
 	public void glDrawElements (int mode, int count, int type, int indices) {
+    prepareDraw();
+    if (requestedElementArrayBuffer != boundElementArrayBuffer) {
+      gl.bindBuffer(GL_ELEMENT_ARRAY_BUFFER, requestedElementArrayBuffer);
+      boundElementArrayBuffer = requestedElementArrayBuffer;
+    }
 		gl.drawElements(mode, count, type, indices);
 	}
 
@@ -527,7 +651,7 @@ public class GwtGL20 implements GL20 {
 
 	@Override
 	public void glEnableVertexAttribArray (int index) {
-		gl.enableVertexAttribArray(index);
+    enabledArrays |= (1 << index);
 	}
 
 	@Override
@@ -558,14 +682,14 @@ public class GwtGL20 implements GL20 {
 	@Override
 	public int glGenBuffer () {
 		WebGLBuffer buffer = gl.createBuffer();
-		return allocateBufferId(buffer);
+		return buffers.add(buffer);
 	}
 
 	@Override
 	public void glGenBuffers (int n, IntBuffer buffers) {
 		for (int i = 0; i < n; i++) {
 			WebGLBuffer buffer = gl.createBuffer();
-			int id = allocateBufferId(buffer);
+			int id = this.buffers.add(buffer);
 			buffers.put(id);
 		}
 	}
@@ -578,44 +702,46 @@ public class GwtGL20 implements GL20 {
 	@Override
 	public int glGenFramebuffer () {
 		WebGLFramebuffer fb = gl.createFramebuffer();
-		return allocateFrameBufferId(fb);
+		return frameBuffers.add(fb);
 	}
 
 	@Override
 	public void glGenFramebuffers (int n, IntBuffer framebuffers) {
 		for (int i = 0; i < n; i++) {
 			WebGLFramebuffer fb = gl.createFramebuffer();
-			int id = allocateFrameBufferId(fb);
+			int id = this.frameBuffers.add(fb);
 			framebuffers.put(id);
-		}
-	}
-
-	@Override
-	public void glGenRenderbuffers (int n, IntBuffer renderbuffers) {
-		for (int i = 0; i < n; i++) {
-			WebGLRenderbuffer rb = gl.createRenderbuffer();
-			int id = allocateRenderBufferId(rb);
-			renderbuffers.put(id);
 		}
 	}
 
 	@Override
 	public int glGenRenderbuffer () {
 		WebGLRenderbuffer rb = gl.createRenderbuffer();
-		return allocateRenderBufferId(rb);
+		return renderBuffers.add(rb);
+	}
+
+	@Override
+	public void glGenRenderbuffers (int n, IntBuffer renderbuffers) {
+		for (int i = 0; i < n; i++) {
+			WebGLRenderbuffer rb = gl.createRenderbuffer();
+			int id = this.renderBuffers.add(rb);
+			renderbuffers.put(id);
+		}
 	}
 
 	@Override
 	public int glGenTexture () {
 		WebGLTexture texture = gl.createTexture();
-		return allocateTextureId(texture);
+		return textures.add(texture);
 	}
 
 	@Override
 	public void glGenTextures (int n, IntBuffer textures) {
-		WebGLTexture texture = gl.createTexture();
-		int id = allocateTextureId(texture);
-		textures.put(id);
+		for (int i = 0; i < n; i++) {
+			WebGLTexture texture = gl.createTexture();
+			int id = this.textures.add(texture);
+			textures.put(id);
+		}
 	}
 
 
@@ -764,26 +890,39 @@ public class GwtGL20 implements GL20 {
 
 	@Override
 	public void glGetUniformfv (int program, int location, FloatBuffer params) {
-		// FIXME
-		throw new GdxRuntimeException("not implemented");
+		Float32Array v = gl.getUniformv(programs.get(program), uniforms.get(program).get(location));
+		for (int i = 0; i < v.length(); i++) {
+			params.put(params.position() + i, v.get(i));
+		}
 	}
 
 	@Override
-	public void glGetUniformiv (int program, int location, IntBuffer params) {
-		// FIXME
-		throw new GdxRuntimeException("not implemented");
+	public void glGetUniformiv (int program, int location, IntBuffer params){
+		Int32Array v = gl.getUniformv(programs.get(program), uniforms.get(program).get(location));
+		for (int i = 0; i < v.length(); i++) {
+			params.put(params.position() + i, v.get(i));
+		}
 	}
 
 	@Override
 	public int glGetUniformLocation (int program, String name) {
 		WebGLUniformLocation location = gl.getUniformLocation(programs.get(program), name);
-		return allocateUniformLocationId(program, location);
+		IntMap<WebGLUniformLocation> progUniforms = uniforms.get(program);
+		if (progUniforms == null) {
+      progUniforms = IntMap.<WebGLUniformLocation>create();
+			uniforms.put(program, progUniforms);
+		}
+		// FIXME check if uniform already stored.
+		int id = progUniforms.add(location);
+		return id;
 	}
 
 	@Override
 	public void glGetVertexAttribfv (int index, int pname, FloatBuffer params) {
-		// FIXME
-		throw new GdxRuntimeException("not implemented");
+    Float32Array v = gl.getVertexAttribv(index, pname);
+    for (int i = 0; i < v.length(); i++) {
+      params.put(params.position() + i, v.get(i));
+    }
 	}
 
 	@Override
@@ -968,7 +1107,7 @@ public class GwtGL20 implements GL20 {
 
 	@Override
 	public void glTexParameterfv (int target, int pname, FloatBuffer params) {
-		gl.texParameterf(target, pname, params.get());
+          gl.texParameterf(target, pname, params.get());
 	}
 
 	@Override
@@ -1233,13 +1372,32 @@ public class GwtGL20 implements GL20 {
 		gl.vertexAttrib4fv(indx, copy(values));
 	}
 
+  // arrayId (index) is in the range 0..GL_MAX_VERTEX_ATTRIBS-1
 	@Override
-	public void glVertexAttribPointer (int indx, int size, int type, boolean normalized, int stride, Buffer ptr) {
-		throw new GdxRuntimeException("not implemented, vertex arrays aren't support in WebGL it seems");
+  public void glVertexAttribPointer(int arrayId, int size, int type, boolean normalize,
+                                              int byteStride, Buffer nioBuffer) {
+
+    VertexAttribArrayState data = vertexAttribArrayState[arrayId];
+
+//    HtmlPlatform.log.info("glVertexAttribPointer Data size: " + nioBuffer.remaining());
+    useNioBuffer |= 1 << arrayId;
+    data.nioBuffer = nioBuffer;
+    data.nioBufferPosition = nioBuffer.position();
+    data.nioBufferLimit = nioBuffer.limit();
+    data.size = size;
+    data.type = type;
+    data.normalize = normalize;
+    data.stride = byteStride == 0 ? size * getTypeSize(type) : byteStride;
 	}
 
 	@Override
 	public void glVertexAttribPointer (int indx, int size, int type, boolean normalized, int stride, int ptr) {
+    useNioBuffer &= ~(1 << indx);
+    if (boundArrayBuffer != requestedArrayBuffer) {
+      gl.bindBuffer(GL_ARRAY_BUFFER, requestedArrayBuffer);
+      boundArrayBuffer = requestedArrayBuffer;
+    }
+
 		gl.vertexAttribPointer(indx, size, type, normalized, stride, ptr);
 	}
 
