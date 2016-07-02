@@ -11,6 +11,7 @@ import java.util.HashSet;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.utils.BufferUtils;
+import com.googlecode.gdxquake2.GdxQuake2;
 
 /**
  * This is not a complete emulation of GL11 -- it only covers the aspects
@@ -619,13 +620,14 @@ public final class GL11Emulation implements GL11 {
   private int oldEnableTex1 = -1;
   protected void prepareDraw() {
 //    if (debugInfo.equals("ModelPart")) {
-//      PlayN.log().info("GL11 emul. prepDraw sys state:" +
-//            " arraysEnabled: " + arraysEnabled + 
-//            " activeTexture: " + activeTexture + " activeClientTexture: " + clientActiveTexture +
-//      		" tex0enabled: " + texture0Enabled + " tex1enabled: " + texture1Enabled  + 
-//      		" matrix dirty: " + matrixDirty);
-//    }
-//    logFirst("Unsupported state for drawArrays: " + unsupportedState.toString());
+     /* GdxQuake2.tools.log("GL11 emul. prepDraw sys state:" +
+            " arraysEnabled: " + arraysEnabled +
+            " activeTexture: " + activeTexture + " activeClientTexture: " + clientActiveTexture +
+      		" tex0enabled: " + texture0Enabled + " tex1enabled: " + texture1Enabled  +
+      		" matrix dirty: " + matrixDirty);
+   */
+   // }
+    //logFirst("Unsupported state for drawArrays: " + unsupportedState.toString());
     
  //   gl.glUseProgram(programObject);
     
@@ -1117,6 +1119,7 @@ public final class GL11Emulation implements GL11 {
 
   @Override
   public void glDrawElements(int mode, int count, int type, Buffer indices) {
+    //GdxQuake2.tools.log("GL11Emulation: DrawElements");
     prepareDraw();
     gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     gl.glDrawElements(mode, count, type, indices);

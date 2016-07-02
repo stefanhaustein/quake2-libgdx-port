@@ -42,7 +42,7 @@ public class ResourceLoaderImpl implements ResourceLoader.Impl {
     missing++;
     
     final String path = rawPath.toLowerCase();
-    System.out.println("Requesting resource: " + path);
+    GdxQuake2.tools.log("Requesting resource: " + path);
 
     GdxQuake2.asyncLocalStorage.getFileHandle(path, new Callback<AsyncFileHandle>() {
 

@@ -3,6 +3,7 @@ package com.googlecode.gdxquake2.gdxext;
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.files.FileHandleStream;
+import com.badlogic.gdx.utils.BufferUtils;
 import com.googlecode.gdxquake2.GdxQuake2;
 
 import java.io.ByteArrayOutputStream;
@@ -103,7 +104,9 @@ public class AsyncFileHandle extends FileHandleStream {
         }
         return new ByteArrayOutputStream() {
             public void close() {
-                data = ByteBuffer.wrap(this.toByteArray());
+                data = BufferUtils.newByteBuffer(this.count);
+                data.put(toByteArray());
+                data.position(0);
                 owner.saveFileHandleImpl(AsyncFileHandle.this, new Callback<Void>() {
 
                     @Override

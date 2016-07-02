@@ -33,6 +33,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.googlecode.gdxquake2.gdxext.AsyncFileHandle;
 import com.googlecode.gdxquake2.GdxQuake2;
+import com.googlecode.gdxquake2.gdxext.AsyncPixmapLoader;
 import com.googlecode.gdxquake2.gl11.GL11;
 import com.googlecode.gdxquake2.gl11.GLDebug;
 import com.googlecode.gdxquake2.gl11.MeshBuilder;
@@ -945,12 +946,26 @@ public class GlRenderer implements Renderer {
     GdxQuake2.asyncLocalStorage.getFileHandle(name.toLowerCase() + ".png", new Callback<AsyncFileHandle>() {
       @Override
       public void onSuccess(AsyncFileHandle result) {
-        // Image was recycled in the meantime.
-        if (image.loadId != loadId) {
-          return;
-        }
-        image.pixmap = new Pixmap(result);
-        image.ready = true;
+        GdxQuake2.tools.log("Successfully loaded " + image.name.toLowerCase() + " calling loadPixmap.");
+        AsyncPixmapLoader.loadPixmap(result, new Callback<Pixmap>() {
+                  @Override
+                  public void onSuccess(Pixmap pixmap) {
+                    GdxQuake2.tools.log("Successfully loaded pixmap for " + image.name.toLowerCase() + ": " + pixmap.getWidth() + "x" + pixmap.getHeight());
+                    // Image was recycled in the meantime.
+                    if (image.loadId != loadId) {
+                      return;
+                    }
+                    image.pixmap = pixmap;
+                    image.ready = true;
+                  }
+
+                  @Override
+                  public void onFailure(Throwable cause) {
+                    cause.printStackTrace();
+                  }
+                }
+        );
+
       }
 
       @Override

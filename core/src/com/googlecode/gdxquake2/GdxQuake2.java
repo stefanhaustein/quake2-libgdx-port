@@ -35,6 +35,7 @@ public class GdxQuake2 extends ApplicationAdapter {
 	public static PlatformTools tools;
 	public static Preferences imageSizes;
 	public static AsyncLocalStorage asyncLocalStorage;
+	public static boolean properGL20;
 
 	private static Preferences state;
 	private static Label statusLabel;
@@ -42,6 +43,7 @@ public class GdxQuake2 extends ApplicationAdapter {
 	private boolean initialized;
 	private double startTime;
 	private Stage installationStage;
+
 
 	public GdxQuake2(PlatformTools tools) {
 		GdxQuake2.tools = tools;
@@ -54,7 +56,7 @@ public class GdxQuake2 extends ApplicationAdapter {
 		imageSizes = Gdx.app.getPreferences("q2gdx-imageSizes");
 		state = Gdx.app.getPreferences("q2gdx-state");
 
-		if ("".equals(state.getBoolean(DOWNLOAD_COMPLETE, false))) {
+		if (state.getBoolean(DOWNLOAD_COMPLETE, false)) {
 			initGame();
 		} else {
 			showInstaller();
@@ -169,6 +171,7 @@ public class GdxQuake2 extends ApplicationAdapter {
 
 		startTime = TimeUtils.millis();
 		initialized = true;
+		properGL20 = true;
 	}
 
 

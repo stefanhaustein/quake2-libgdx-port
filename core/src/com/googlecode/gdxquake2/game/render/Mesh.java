@@ -28,6 +28,7 @@ package com.googlecode.gdxquake2.game.render;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
+import com.googlecode.gdxquake2.GdxQuake2;
 import com.googlecode.gdxquake2.gl11.GL11;
 import com.googlecode.gdxquake2.gl11.MeshBuilder;
 
@@ -278,6 +279,8 @@ public class Mesh {
       dstTextureCoords.limit(maxIdx + 2);
       GlState.gl.glTexCoordPointer( 2, GL11.GL_FLOAT, 0, dstTextureCoords);
 
+      //GdxQuake2.tools.log("Mesh.java");
+
       GlState.gl.glDrawElements(mode, srcIndexBuf.limit() - srcIndexBuf.position(), GL11.GL_UNSIGNED_SHORT, srcIndexBuf);
       pos += count;
     }
@@ -472,6 +475,9 @@ public class Mesh {
     }
     anotherIndirection.position(0);
     anotherIndirection.limit(elementPos);
+
+    //GdxQuake2.tools.log("Mesh.java 2");
+
     GlState.gl.glDrawElements(GL11.GL_TRIANGLES, elementPos, GL11.GL_UNSIGNED_SHORT, anotherIndirection);
     anotherIndirection.limit(anotherIndirection.capacity());
     

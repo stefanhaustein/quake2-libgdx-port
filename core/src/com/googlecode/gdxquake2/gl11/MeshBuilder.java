@@ -1,5 +1,7 @@
 package com.googlecode.gdxquake2.gl11;
 
+import com.googlecode.gdxquake2.GdxQuake2;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -246,6 +248,9 @@ public class MeshBuilder {
     }
     // TODO(haustein) fix in PlayN
     indexBuffer.limit(indexCount);
+
+    //GdxQuake2.tools.log("MeshBuilder.java");
+
     gl.glDrawElements(GL11.GL_TRIANGLES, indexCount, GL11.GL_UNSIGNED_SHORT, indexBuffer);
     indexBuffer.limit(indexBuffer.capacity());
     

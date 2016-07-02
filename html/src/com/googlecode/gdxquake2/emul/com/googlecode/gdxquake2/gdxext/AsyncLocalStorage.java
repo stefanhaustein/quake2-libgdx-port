@@ -5,15 +5,12 @@ import java.nio.ByteBuffer;
 import java.nio.HasArrayBufferView;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.BufferUtils;
 import com.google.gwt.core.client.JavaScriptObject;
-import com.google.gwt.typedarrays.shared.ArrayBuffer;
 import com.google.gwt.typedarrays.shared.ArrayBufferView;
-import com.google.gwt.typedarrays.shared.TypedArrays;
+import com.google.gwt.typedarrays.shared.Int8Array;
 import com.google.gwt.typedarrays.shared.Uint8Array;
 import com.googlecode.gdxquake2.GdxQuake2;
-import com.googlecode.gdxquake2.gdxext.*;
 
 public class AsyncLocalStorage {
 
@@ -71,7 +68,6 @@ public class AsyncLocalStorage {
     } else if (error) {
       readyCallback.onFailure(new IOException("Database intialization failure"));
     } else {
-
       Gdx.app.postRunnable(new Runnable() {
           @Override
           public void run() {
@@ -95,38 +91,61 @@ public class AsyncLocalStorage {
   }-*/;
 
   public void getFileHandle(final String path, final Callback<AsyncFileHandle> callback) {
-    getFileHandleImpl(path, new Callback<ArrayBufferView>() {
-      @Override
-      public void onSuccess(ArrayBufferView result) {
-        // TODO(haustein): Add a way to wrap an ArrayBuffer w/o copy.
-        ByteBuffer buffer = BufferUtils.newByteBuffer(result.byteLength());
-        ArrayBufferView wrapped = ((HasArrayBufferView) buffer).getTypedArray();
-        ((Uint8Array) wrapped.buffer()).set((Uint8Array) result.buffer());
+    GdxQuake2.tools.log("getFileHandle: " + path);
+    if (db != null) {
+      GdxQuake2.tools.log("db != null, calling impl");
+      getFileHandleImpl(path, new Callback<Int8Array>() {
+        @Override
+        public void onSuccess(Int8Array result) {
+          GdxQuake2.tools.log("getFileHandle.onSuccess for " + path);
+          // TODO(haustein): Add a way to wrap an ArrayBuffer w/o copy.
+          ByteBuffer buffer = BufferUtils.newByteBuffer(result.length()); // ByteBuffer.wrap(result.buffer()); // BufferUtils.newByteBuffer(result.byteLength());
 
-        AsyncFileHandle fileHandle = new AsyncFileHandle(AsyncLocalStorage.this, path);
-        fileHandle.data = buffer;
-        callback.onSuccess(fileHandle);
-      }
+          // :-(
+          for (int i = 0; i < result.length(); i++) {
+            buffer.put(i, result.get(i));
+          }
 
-      @Override
-      public void onFailure(Throwable cause) {
-        // Throwable will be null from JS
-        callback.onFailure(new IOException("IDB read error"));
-      }
-    });
+          AsyncFileHandle fileHandle = new AsyncFileHandle(AsyncLocalStorage.this, path);
+          fileHandle.data = buffer;
+          callback.onSuccess(fileHandle);
+        }
+
+        @Override
+        public void onFailure(Throwable cause) {
+          GdxQuake2.tools.log("getFileHandle.onFailure for " + path);
+          // Throwable will be null from JS
+          callback.onFailure(new IOException("IDB read error"));
+        }
+      });
+    } else if (error) {
+      GdxQuake2.tools.log("db error");
+      callback.onFailure(new IOException("Database intialization failure"));
+    } else {
+      GdxQuake2.tools.log("db == null, posting for later");
+      Gdx.app.postRunnable(new Runnable() {
+        @Override
+        public void run() {
+          getFileHandle(path, callback);
+        }
+      });
+    }
   }
 
-  public native void getFileHandleImpl(String path, Callback<ArrayBufferView> callback) /*-{
+  public native void getFileHandleImpl(String path, Callback<Int8Array> callback) /*-{
+    $wnd.console.log("getFileHandleImpl enter " + path);
     var db = this.@com.googlecode.gdxquake2.gdxext.AsyncLocalStorage::db;
     var trans = db.transaction(["blobs"], "readonly");
     var objectStore = trans.objectStore("blobs");
     var request = objectStore.get(path);
-    trans.onsuccess = function(event) {
+    $wnd.console.log("getFileHandleImpl get() was called " + path);
+    trans.oncomplete = function(event) {
        var result = request.result;
+       $wnd.console.log("getFileHandleImpl callback success for " + path + " result: ", result);
        callback.@com.googlecode.gdxquake2.gdxext.Callback::onSuccess(Ljava/lang/Object;)(result);
     }
     trans.onerror = function() {
-      $wnd.console.log("Transaction error");
+       $wnd.console.log("getFileHandleImpl transaction error success for " + path);
     }
   }-*/;
 }
