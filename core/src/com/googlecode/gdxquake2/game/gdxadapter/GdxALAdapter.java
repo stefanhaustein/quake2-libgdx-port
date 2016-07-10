@@ -19,6 +19,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 package com.googlecode.gdxquake2.game.gdxadapter;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.googlecode.gdxquake2.gdxext.AsyncFileHandle;
 import com.googlecode.gdxquake2.GdxQuake2;
@@ -33,7 +34,7 @@ import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.util.HashMap;
 import java.util.Map;
-
+import java.util.concurrent.ExecutionException;
 
 
 /**
@@ -92,21 +93,26 @@ public class GdxALAdapter extends ALAdapter {
     int format;
     String location;
 
-    private Sound sound;
+    private Music sound;
 
-    BufferData(String location) {
+    BufferData(final String location) {
       this.location = location;
       sound = null;
 
       GdxQuake2.asyncLocalStorage.getFileHandle(location.toLowerCase(), new Callback<AsyncFileHandle>() {
         @Override
         public void onSuccess(AsyncFileHandle fileHandle) {
-          sound = Gdx.audio.newSound(fileHandle); //GdxQuake2.tools.decodeWav(data);
+          try {
+            sound = Gdx.audio.newMusic(fileHandle); //GdxQuake2.tools.decodeWav(data);
+          } catch (Exception e) {
+            GdxQuake2.tools.log("newMusic failed for '" + location + "' cause: " + e);
+          }
         }
 
         @Override
         public void onFailure(Throwable cause) {
-          cause.printStackTrace();
+          GdxQuake2.tools.log("GdxAlAdapter failed to load '" + location + "' cause: " + cause);
+
         }
       });
     }

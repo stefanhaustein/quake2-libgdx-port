@@ -113,9 +113,8 @@ public class AsyncLocalStorage {
 
         @Override
         public void onFailure(Throwable cause) {
-          GdxQuake2.tools.log("getFileHandle.onFailure for " + path);
           // Throwable will be null from JS
-          callback.onFailure(new IOException("IDB read error"));
+          callback.onFailure(new IOException("IDB read error for path: " + path));
         }
       });
     } else if (error) {
@@ -142,10 +141,15 @@ public class AsyncLocalStorage {
     trans.oncomplete = function(event) {
        var result = request.result;
        $wnd.console.log("getFileHandleImpl callback success for " + path + " result: ", result);
-       callback.@com.googlecode.gdxquake2.gdxext.Callback::onSuccess(Ljava/lang/Object;)(result);
+       if (result != null) {
+         callback.@com.googlecode.gdxquake2.gdxext.Callback::onSuccess(Ljava/lang/Object;)(result);
+       } else {
+         callback.@com.googlecode.gdxquake2.gdxext.Callback::onFailure(Ljava/lang/Throwable;)(null);
+       }
     }
     trans.onerror = function() {
-       $wnd.console.log("getFileHandleImpl transaction error success for " + path);
+       $wnd.console.log("getFileHandleImpl transaction error for " + path);
+       callback.@com.googlecode.gdxquake2.gdxext.Callback::onFailure(Ljava/lang/Throwable;)(null);
     }
   }-*/;
 }
