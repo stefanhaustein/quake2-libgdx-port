@@ -40,7 +40,7 @@ public class GwtMusic implements Music, SMSoundCallback {
 	private OnCompletionListener onCompletionListener;
 
 	public GwtMusic (FileHandle file) {
-		GdxQuake2.tools.log("GwtMusic ctor");
+		GdxQuake2.tools.log("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXxx GwtMusic ctor");
 		String url;
 		if (file.type() == Files.FileType.Internal && !(file instanceof AsyncFileHandle)) {
 			GdxQuake2.tools.log("bad path");

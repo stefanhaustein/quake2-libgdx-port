@@ -25,6 +25,7 @@ package com.googlecode.gdxquake2.game.render;
 
 
 import com.badlogic.gdx.utils.NumberUtils;
+import com.googlecode.gdxquake2.GdxQuake2;
 import com.googlecode.gdxquake2.game.client.Window;
 import com.googlecode.gdxquake2.game.common.AsyncCallback;
 import com.googlecode.gdxquake2.game.common.Com;
@@ -1133,15 +1134,21 @@ public class Models  {
 	*/
 	static void R_BeginRegistration(String model, final Runnable callback)
 	{
+		GdxQuake2.tools.log("R_BeginRegistration 0");
 		resetModelArrays();
+		GdxQuake2.tools.log("R_BeginRegistration 1");
 		Polygons.reset();
+		GdxQuake2.tools.log("R_BeginRegistration 2");
 
 		ConsoleVariable flushmap;
+		GdxQuake2.tools.log("R_BeginRegistration 3");
 
 		GlState.registration_sequence++;
 		GlState.r_oldviewcluster = -1;		// force markleafs
+		GdxQuake2.tools.log("R_BeginRegistration 4");
 
 		final String fullname = "maps/" + model + ".bsp";
+		GdxQuake2.tools.log("R_BeginRegistration 5");
 
 		// explicitly free the old map if different
 		// this guarantees that mod_known[0] is the world map
@@ -1152,6 +1159,7 @@ public class Models  {
 			Com.Println("setting world_model to null");
 			world_model = null;
 		}
+		GdxQuake2.tools.log("R_BeginRegistration 6");
 
 		Mod_ForName(fullname, new AsyncCallback<Model>() {
       public void onSuccess(Model response) {
@@ -1165,6 +1173,7 @@ public class Models  {
         Com.Error(Constants.ERR_DROP, "Mod_NumForName: " + fullname + " not found");
       }
     });
+		GdxQuake2.tools.log("R_BeginRegistration End");
 
 		GlState.r_viewcluster = -1;
 	}

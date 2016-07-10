@@ -128,7 +128,12 @@ public class GlState
 
 
   public static int generateBuffer() {
+    GdxQuake2.tools.log(">>> generateBuffer");
+
     gl.glGenBuffers(1, returnValueArray, 0);
+
+    GdxQuake2.tools.log("<<< generateBuffer");
+
     return returnValueArray[0];
   }
 

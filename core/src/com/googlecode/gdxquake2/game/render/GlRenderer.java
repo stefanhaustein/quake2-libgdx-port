@@ -175,7 +175,9 @@ public class GlRenderer implements Renderer {
 
   @Override
   public final void BeginRegistration(String map, Runnable callback) {
+    GdxQuake2.tools.log(">>> beginRegistration");
     Models.R_BeginRegistration(map, callback);
+    GdxQuake2.tools.log("<<< beginRegistration");
   }
 
   @Override

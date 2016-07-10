@@ -721,11 +721,17 @@ if (data instanceof FloatBuffer) {
 
 	@Override
 	public void glGenBuffers (int n, IntBuffer buffers) {
+
+		GdxQuake2.tools.log(">>> Gl20.glGenBuffers(" + n + ", " + buffers);
+
 		for (int i = 0; i < n; i++) {
 			WebGLBuffer buffer = gl.createBuffer();
 			int id = this.buffers.add(buffer);
-			buffers.put(id);
+			buffers.put(buffers.position() + i, id);
 		}
+
+		GdxQuake2.tools.log("<<< Gl20.glGenBuffers(" + n + ", " + buffers);
+
 	}
 
 	@Override
@@ -744,7 +750,7 @@ if (data instanceof FloatBuffer) {
 		for (int i = 0; i < n; i++) {
 			WebGLFramebuffer fb = gl.createFramebuffer();
 			int id = this.frameBuffers.add(fb);
-			framebuffers.put(id);
+			framebuffers.put(framebuffers.position() + i, id);
 		}
 	}
 
@@ -759,7 +765,7 @@ if (data instanceof FloatBuffer) {
 		for (int i = 0; i < n; i++) {
 			WebGLRenderbuffer rb = gl.createRenderbuffer();
 			int id = this.renderBuffers.add(rb);
-			renderbuffers.put(id);
+			renderbuffers.put(renderbuffers.position() + i, id);
 		}
 	}
 
@@ -774,7 +780,7 @@ if (data instanceof FloatBuffer) {
 		for (int i = 0; i < n; i++) {
 			WebGLTexture texture = gl.createTexture();
 			int id = this.textures.add(texture);
-			textures.put(id);
+			textures.put(textures.position() + i, id);
 		}
 	}
 

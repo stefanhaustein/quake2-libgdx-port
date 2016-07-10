@@ -18,6 +18,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 package com.googlecode.gdxquake2.game.sound;
 
+import com.googlecode.gdxquake2.GdxQuake2;
 import com.googlecode.gdxquake2.game.gdxadapter.GdxALAdapter;
 import com.googlecode.gdxquake2.game.client.Console;
 import com.googlecode.gdxquake2.game.common.Com;
@@ -134,6 +135,8 @@ public class ALSoundImpl implements SoundImpl {
       LoadSound(sfx);
     }
 
+    GdxQuake2.tools.log("END REGISTRATION END, setting s_registering to false");
+
     s_registering = false;
   }
 
@@ -233,12 +236,16 @@ public class ALSoundImpl implements SoundImpl {
     if (sc != null) {
       s.cache = sc;
       Console.Print("Creating audio element " + namebuffer + "\r");
-      
+
+      GdxQuake2.tools.log("-- Creating audio element: " + namebuffer);
+
       sc.soundUrl = /*"baseq2/" + */namebuffer;
       initBuffer(sc.soundUrl, sc.data, s.bufferId, sc.speed);
       s.isCached = true;
       // free samples for GC
       s.cache.data = null;
+
+      GdxQuake2.tools.log("-- Created audio element: " + namebuffer);
     }
 
     return sc;

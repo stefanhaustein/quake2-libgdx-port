@@ -123,7 +123,7 @@ public final class GL11Emulation implements GL11 {
         indices.put(i + 5, (short) (offset + 3));
         offset += 4;
     }
-    
+
     tmpIntBuffer.position(0).limit(1);
     gl.glGenBuffers(1, tmpIntBuffer);
     quadsToTrianglesVbo = tmpIntBuffer.get(0);
@@ -1294,9 +1294,15 @@ public final class GL11Emulation implements GL11 {
 
   @Override
   public void glGenBuffers(int n, int[] buffers, int offset) {
+
+    GdxQuake2.tools.log(">>> Gl11.glGenBuffers");
+
     IntBuffer intBuffer = BufferUtils.newIntBuffer(n);
     gl.glGenBuffers(n, intBuffer);
     intBuffer.get(buffers, offset, n);
+
+    GdxQuake2.tools.log("<<< Gl11.glGenBuffers");
+
   }
 
   @Override

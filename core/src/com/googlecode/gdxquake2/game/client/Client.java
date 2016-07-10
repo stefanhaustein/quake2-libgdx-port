@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteOrder;
 
+import com.googlecode.gdxquake2.GdxQuake2;
 import com.googlecode.gdxquake2.game.common.*;
 import com.googlecode.gdxquake2.game.game.*;
 import com.googlecode.gdxquake2.game.server.ServerMain;
@@ -1224,12 +1225,22 @@ public final class Client {
     }
 
     //	  ZOID
+
+    GdxQuake2.tools.log("going to register sounds.");
+
     ClientParser.RegisterSounds();
+
+    GdxQuake2.tools.log("going to prep refresh.");
+
     ClientView.PrepRefresh();
+
+    GdxQuake2.tools.log("Doing some messgae writing.");
 
     Buffers.writeByte(Globals.cls.netchan.message, Constants.clc_stringcmd);
     Buffers.WriteString(Globals.cls.netchan.message, "begin "
         + Client.precache_spawncount + "\n");
+
+    GdxQuake2.tools.log("Leaving requestNextDownload.");
   }
 
   /**

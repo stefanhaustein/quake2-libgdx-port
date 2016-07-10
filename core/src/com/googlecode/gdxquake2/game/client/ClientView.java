@@ -24,6 +24,7 @@
 package com.googlecode.gdxquake2.game.client;
 
 
+import com.googlecode.gdxquake2.GdxQuake2;
 import com.googlecode.gdxquake2.game.common.AsyncCallback;
 import com.googlecode.gdxquake2.game.common.CM;
 import com.googlecode.gdxquake2.game.common.Com;
@@ -55,31 +56,50 @@ public class ClientView {
     static void PrepRefresh() {
         int i;
 
+        GdxQuake2.tools.log("PrepRefresh 0");
+
         if ((i = Globals.cl.configstrings[Constants.CS_MODELS + 1].length()) == 0)
             return; // no map loaded
+
+        GdxQuake2.tools.log("PrepRefresh 1");
 
         if (inPrepRefresh) {
           Com.Printf("already in PrepRefresh(); returning\n");
           return;
         }
         inPrepRefresh = true;
-        
+
+        GdxQuake2.tools.log("PrepRefresh 2");
+
         Models.clearModelCache();
+
+        GdxQuake2.tools.log("PrepRefresh 3");
 
         Screen.AddDirtyPoint(0, 0);
         Screen.AddDirtyPoint(Globals.viddef.width - 1, Globals.viddef.height - 1);
 
+        GdxQuake2.tools.log("PrepRefresh 4");
+
         // let the render dll load the map
-        String mapname = Globals.cl.configstrings[Constants.CS_MODELS + 1].substring(5,
+        final String mapname = Globals.cl.configstrings[Constants.CS_MODELS + 1].substring(5,
                 i - 4); // skip "maps/"
         // cut off ".bsp"
+
+        GdxQuake2.tools.log("PrepRefresh 5");
 
         // register models, pics, and skins
         Com.Printf("Map: " + mapname + "\r");
         Screen.UpdateScreen();
+
+        GdxQuake2.tools.log("PrepRefresh 6");
+
+
         Globals.re.BeginRegistration(mapname, new Runnable() {
 
           public void run() {
+
+              GdxQuake2.tools.log("PrepRefresh 7; mapname: " + mapname);
+
             Com.Printf("                                     \r");
 
             // precache status bar pics
@@ -187,7 +207,8 @@ public class ClientView {
             
             inPrepRefresh = false;
           }});
-        
+
+        GdxQuake2.tools.log("PrepRefresh end");
     }
 
     public static void AddNetgraph() {
