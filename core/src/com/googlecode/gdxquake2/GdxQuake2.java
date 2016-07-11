@@ -15,6 +15,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.googlecode.gdxquake2.game.sound.ALSoundImpl;
+import com.googlecode.gdxquake2.gdxext.ProgressTracker;
 import com.googlecode.gdxquake2.gl11.GL11Emulation;
 import com.googlecode.gdxquake2.game.client.Dimension;
 import com.googlecode.gdxquake2.game.client.Screen;
@@ -38,12 +39,17 @@ public class GdxQuake2 extends ApplicationAdapter {
 	public static boolean properGL20;
 
 	private static Preferences state;
-	private static Label statusLabel;
+
+	private Label actionLabel;
+	private Label fileLabel;
+	private Label progressLabel;
+
+	private ProgressTracker progressTracker;
 
 	private boolean initialized;
 	private double startTime;
 	private Stage installationStage;
-
+	private Skin skin;
 
 	public GdxQuake2(PlatformTools tools) {
 		GdxQuake2.tools = tools;
@@ -56,7 +62,7 @@ public class GdxQuake2 extends ApplicationAdapter {
 		imageSizes = Gdx.app.getPreferences("q2gdx-imageSizes");
 		state = Gdx.app.getPreferences("q2gdx-state");
 
-		if (state.getBoolean(DOWNLOAD_COMPLETE, false)) {
+		if (state.getBoolean(DOWNLOAD_COMPLETE, false) && false) {
 			initGame();
 		} else {
 			showInstaller();
@@ -64,27 +70,23 @@ public class GdxQuake2 extends ApplicationAdapter {
 	}
 
 	void initError(String msg, Throwable cause) {
-		showInitStatus(msg + ": " + cause.toString());
-	}
-
-
-	/**
-	 * Use this to show updates before the quake engine is ready.
-     */
-	public static void showInitStatus(String s) {
-		if (statusLabel != null) {
-			statusLabel.setText(s);
+		if (progressTracker != null) {
+			progressTracker.action = "Error";
+			progressTracker.file = msg;
+			progressTracker.callback.run();
 		}
 	}
 
+
+
 	public void showInstaller() {
-		Skin skin = new Skin(Gdx.files.internal("uiskin.json"));
+		skin = new Skin(Gdx.files.internal("uiskin.json"));
 		installationStage = new Stage();
 		Gdx.input.setInputProcessor(installationStage);
 
 		final Table table = new Table(skin);
 		table.setFillParent(true);
-		table.add("Quake II libGDX port installer");
+		table.add("Quake II libGDX Port Installer");
 		table.row();
 		table.add(" ");
 		table.row();
@@ -102,21 +104,32 @@ public class GdxQuake2 extends ApplicationAdapter {
 		table.row();
 		table.add(" ");
 		table.row();
-		statusLabel = new Label("(Waiting for user confirmation)", skin);
-		table.add(statusLabel).expandX();
+		//fileLabel = new Label("(Waiting for user confirmation)", skin);
+		//table.add(fileLabel).expandX();
 		button.addListener(new EventListener() {
 			@Override
 			public boolean handle(Event event) {
 				if (event instanceof ChangeListener.ChangeEvent) {
-					urlField.setDisabled(true);
-					button.removeListener(this);
-					button.setVisible(false);
 					String url = urlField.getText();
-					showInitStatus("(Initiating download...)");
+					// showInitStatus("(Initiating download...)");
+
+					table.remove();
+					showProgressScreen();
+					progressTracker = new ProgressTracker(new Runnable() {
+						public void run() {
+							actionLabel.setText(progressTracker.action);
+							fileLabel.setText(progressTracker.file);
+							if (progressTracker.total != 0 || progressTracker.processed > 0) {
+								progressLabel.setText(progressTracker.processed + " / " + progressTracker.total +
+										" (" + (100 * progressTracker.processed / progressTracker.total) + "%)");
+							}
+						}
+					});
+					fileLabel.setText(url);
+
 					Installer installer = new Installer(url, new Callback<Void>() {
 						@Override
 						public void onSuccess(Void result) {
-							showInitStatus("All files successfully installed and converted");
 							state.putBoolean(DOWNLOAD_COMPLETE, true);
 							state.flush();
 							initGame();
@@ -127,7 +140,7 @@ public class GdxQuake2 extends ApplicationAdapter {
 							initError("Error installing files", cause);
 						}
 
-					});
+					}, progressTracker);
 					Gdx.app.postRunnable(installer);
 				}
 				return true;
@@ -136,6 +149,31 @@ public class GdxQuake2 extends ApplicationAdapter {
 		installationStage.addActor(table);
 	}
 
+	public void showProgressScreen() {
+		final Table table = new Table(skin);
+		table.setFillParent(true);
+		table.add("Quake II libGDX Port Installation Progress").center().colspan(2);
+		table.row();
+		table.add(" ");
+		table.row();
+
+		table.add("Action: ").right();
+		actionLabel = new Label("Waiting for Connection", skin);
+		table.add(actionLabel).expandX().left();
+		table.row();
+
+		table.add("File: ").right();
+		fileLabel = new Label("", skin);
+		table.add(fileLabel).expandX().left();
+		table.row();
+
+		table.add("Processed: ").right();
+		progressLabel = new Label("N/A", skin);
+		table.add(progressLabel).expandX().left();
+		table.row();
+
+		installationStage.addActor(table);
+	}
 
 	public static Dimension getImageSize(String name) {
 		if (name.startsWith("/")) {

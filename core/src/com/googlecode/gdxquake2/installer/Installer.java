@@ -6,11 +6,8 @@ import com.badlogic.gdx.Gdx;
 
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.PixmapIO;
-import com.googlecode.gdxquake2.gdxext.AsyncFileHandle;
-import com.googlecode.gdxquake2.gdxext.Callback;
+import com.googlecode.gdxquake2.gdxext.*;
 import com.googlecode.gdxquake2.GdxQuake2;
-import com.googlecode.gdxquake2.gdxext.UnZip;
-import com.googlecode.gdxquake2.gdxext.ZipEntry;
 
 public class Installer implements Runnable {
   Callback<Void> doneCallback;
@@ -19,16 +16,17 @@ public class Installer implements Runnable {
   ImageConverter walConverter = new WALConverter();
   String url;
   boolean failed = false;
-  int pending = 0;
+  int pending;
+  final ProgressTracker progressTracker;
 
-  public Installer(String url, Callback<Void> doneCallback) {
+  public Installer(String url, Callback<Void> doneCallback, ProgressTracker progressTracker) {
     this.doneCallback = doneCallback;
+    this.progressTracker = progressTracker;
     this.url = url;
   }
 
   void error(String msg, Throwable cause) {
     failed = true;
-    GdxQuake2.showInitStatus(msg);
     doneCallback.onFailure(cause);
   }
 
@@ -37,12 +35,11 @@ public class Installer implements Runnable {
     return new Callback() {
       @Override
       public void onSuccess(Object result) {
-          System.out.println("Success: " + result + " pending: " + pending);
-          pending--;
-          if (pending == 0 && !failed) {
-            GdxQuake2.imageSizes.flush();
-            doneCallback.onSuccess(null);
-          }
+        pending--;
+        if (pending == 0 && !failed) {
+          GdxQuake2.imageSizes.flush();
+          doneCallback.onSuccess(null);
+        }
       }
 
       @Override
@@ -55,6 +52,9 @@ public class Installer implements Runnable {
 
 
   public void run() {
+    progressTracker.action = "Downloading";
+    progressTracker.file = url;
+
     UnZip unZip = new UnZip(url,
         new Callback<ZipEntry>() {
            @Override
@@ -66,15 +66,18 @@ public class Installer implements Runnable {
              error("Unzip failed", cause);
            }
         },
-        await());
+        await(), progressTracker);
     Gdx.app.postRunnable(unZip);
   }
 
 
   void processFile(String path, ByteBuffer data) {
     path = path.toLowerCase();
+    progressTracker.processed++;
+    progressTracker.file = path;
     if (path.endsWith(".pak")) {
-      GdxQuake2.showInitStatus("Unpacking: " + path);
+      progressTracker.action = "Unpacking PAK File";
+      progressTracker.callback.run();
       unpack(path, data);
     } else {
       ImageConverter converter = null;
@@ -87,23 +90,24 @@ public class Installer implements Runnable {
       } else {
         if (path.startsWith("install/data/docs/") || path.endsWith(".exe") || path.endsWith(".dll") ||
                 path.equals("install/cdrom.spd")) {
-          GdxQuake2.showInitStatus("Skipping: " + path);
+          progressTracker.action = "Skipping";
         } else {
-          GdxQuake2.showInitStatus("Extracting: " + path);
+          progressTracker.action = "Storing";
           AsyncFileHandle fileHandle = GdxQuake2.asyncLocalStorage.createFileHandle(path);
           fileHandle.addCommitListener((Callback<AsyncFileHandle>) await());
           fileHandle.writeBuffer(data, false);
         }
+        progressTracker.callback.run();
         return;
       }
-      GdxQuake2.showInitStatus("Converting: " + path);
+      progressTracker.action = "Converting Image";
+      progressTracker.callback.run();
       convert(path, converter, data);
     }
   }
 
 
   void unpack(String path, ByteBuffer data) {
-    GdxQuake2.showInitStatus("Unpacking pak file");
     Callback<ZipEntry> extractedCallback = new Callback<ZipEntry>() {
       @Override
       public void onSuccess(ZipEntry result) {
@@ -117,6 +121,7 @@ public class Installer implements Runnable {
     };
 
     PakFile pakFile = new PakFile(data, extractedCallback, await());
+    progressTracker.total += pakFile.numpackfiles;
     Gdx.app.postRunnable(pakFile);
   }
 

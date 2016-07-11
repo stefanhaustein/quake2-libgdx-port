@@ -16,23 +16,27 @@ public class UnZip implements Runnable {
     private final String url;
     private final Callback<ZipEntry> dataCallback;
     private final Callback<Void> doneCallback;
+    private final ProgressTracker progressTracker;
     private JsArray zipEntries;
     private int zipIndex;
 
     // Hack to avoid JSNI ultra-long parameter specification for
-    private String currentName;
     private ByteBuffer currentBuffer;
 
-    public UnZip(String url, Callback<ZipEntry> dataCallback, Callback<Void> doneCallback) {
+    public UnZip(String url, Callback<ZipEntry> dataCallback, Callback<Void> doneCallback, ProgressTracker progressTracker) {
         this.url = url;
         this.dataCallback = dataCallback;
         this.doneCallback = doneCallback;
+        this.progressTracker = progressTracker;
     }
 
     public void run() {
         if (zipEntries == null) {
             request(url);
         } else if (zipIndex < zipEntries.length()) {
+            if (zipIndex == 0) {
+                progressTracker.total += zipEntries.length();
+            }
             processEntry(zipEntries.get(zipIndex++));
         } else {
             doneCallback.onSuccess(null);
@@ -41,6 +45,12 @@ public class UnZip implements Runnable {
 
     private void postSelf() {
         Gdx.app.postRunnable(this);
+    }
+
+    private void progress(String name, double current, double total) {
+        progressTracker.action = "Unpacking " + Math.round(current * 100 / total) + "%";
+        progressTracker.file = name;
+        progressTracker.callback.run();
     }
 
     private native void processEntry(JavaScriptObject zipEntry) /*-{
@@ -73,10 +83,10 @@ public class UnZip implements Runnable {
 
       zipEntry.getData(new ArrayWriter(array),
         function(array) {
-          self.@com.googlecode.gdxquake2.gdxext.UnZip::currentName = fileName;
-          self.@com.googlecode.gdxquake2.gdxext.UnZip::entryAvailable()();
+          self.@com.googlecode.gdxquake2.gdxext.UnZip::entryAvailable(Ljava/lang/String;)(fileName);
         },
         function(current, total) {
+          self.@com.googlecode.gdxquake2.gdxext.UnZip::progress(Ljava/lang/String;DD)(fileName, current, total)
         }
       );
     }-*/;
@@ -87,11 +97,10 @@ public class UnZip implements Runnable {
         return (Uint8Array) ((HasArrayBufferView) currentBuffer).getTypedArray();
     }
 
-    private void entryAvailable() {
-        GdxQuake2.tools.log("entryAvailable " + currentName + "; calling onsuccess");
-        dataCallback.onSuccess(new ZipEntry(currentName, currentBuffer));
+    private void entryAvailable(String name) {
+        GdxQuake2.tools.log("entryAvailable " + name + "; calling onsuccess");
+        dataCallback.onSuccess(new ZipEntry(name, currentBuffer));
         GdxQuake2.tools.log("back from onSuccess");
-        currentName = null;
         currentBuffer = null;
         postSelf();
     }

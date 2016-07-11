@@ -34,7 +34,7 @@ public class PakFile implements Runnable {
       (('K' << 24) + ('C' << 16) + ('A' << 8) + 'P');
 
   private ByteBuffer packhandle;
-  private int numpackfiles;
+  int numpackfiles;
   private Callback<ZipEntry> dataCallback;
   private Callback<Void> readyCallback;
   private int index;
