@@ -27,6 +27,8 @@ import com.badlogic.gdx.backends.gwt.soundmanager2.SoundManager;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.Base64Coder;
 import com.badlogic.gdx.utils.StringBuilder;
+import com.google.gwt.core.client.JsArray;
+import com.google.gwt.core.client.JsArrayString;
 import com.googlecode.gdxquake2.GdxQuake2;
 import com.googlecode.gdxquake2.gdxext.AsyncFileHandle;
 
@@ -53,7 +55,14 @@ public class GwtMusic implements Music, SMSoundCallback {
 			char[] encodedChars = Base64Coder.encode(data);
 			GdxQuake2.tools.log("encoded to " + encodedChars.length + " chars.");
 
-			url = "data:audio/wav;base64," + new String(encodedChars);
+			// WTF, GWT?
+			JsArrayString parts = (JsArrayString) JsArrayString.createArray();
+			parts.push("data:audio/wav;base64,");
+			for (int i = 0; i < encodedChars.length; i += 1024) {
+				String part = new String(encodedChars, i, Math.min(1024, encodedChars.length - i));
+				parts.push(part);
+			}
+			url = parts.join("");
 
 			GdxQuake2.tools.log("data url length: " + url.length());
 		}
@@ -64,6 +73,10 @@ public class GwtMusic implements Music, SMSoundCallback {
 		GdxQuake2.tools.log("setting callback");
 		soundOptions.callback = this;
 	}
+
+	native String concat(JsArrayString parts) /*-{
+
+	}-*/;
 
 	@Override
 	public void play () {

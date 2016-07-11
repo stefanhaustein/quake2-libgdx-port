@@ -62,7 +62,7 @@ public class GdxQuake2 extends ApplicationAdapter {
 		imageSizes = Gdx.app.getPreferences("q2gdx-imageSizes");
 		state = Gdx.app.getPreferences("q2gdx-state");
 
-		if (state.getBoolean(DOWNLOAD_COMPLETE, false) && false) {
+		if (state.getBoolean(DOWNLOAD_COMPLETE, false)) {
 			initGame();
 		} else {
 			showInstaller();
