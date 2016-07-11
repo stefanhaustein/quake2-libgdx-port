@@ -11,10 +11,21 @@ Goals:
 
 Status: 
 
+ - 2016-07-12: Web and Desktop should basically work with sound now.
  - 2016-06-12: Web download, decompression and conversion works.
  - 2016-06-11: Desktop version basically works (incl. libGDX scene2d "installer" UI) 
  - 2016-06-10: Desktop file donwload, extraction and conversion seems to work.
 
+TODO:
+
+ - Offer to provide a new URL on load errors without a page reload.
+ - Remove log spam
+ - Mouse support
+ - Fullscreen
+ - Better default window size
+ - Firefox errors
+ - Androd unzip problems
+ - Port improvements back to libGDX
 
 Demo of the old playn version: http://quake2playn.appspot.com/ 
 
