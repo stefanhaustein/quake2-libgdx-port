@@ -7,11 +7,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.scenes.scene2d.Event;
 import com.badlogic.gdx.scenes.scene2d.EventListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.TextField;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.googlecode.gdxquake2.game.sound.ALSoundImpl;
@@ -29,6 +25,7 @@ import com.googlecode.gdxquake2.installer.Installer;
 import com.googlecode.gdxquake2.game.gdxadapter.ResourceLoaderImpl;
 import com.googlecode.gdxquake2.gdxext.AsyncLocalStorage;
 import com.googlecode.gdxquake2.gdxext.Callback;
+import javafx.beans.binding.ObjectExpression;
 
 public class GdxQuake2 extends ApplicationAdapter {
 	static final String DOWNLOAD_COMPLETE = "downloadComplete";
@@ -50,6 +47,8 @@ public class GdxQuake2 extends ApplicationAdapter {
 	private double startTime;
 	private Stage installationStage;
 	private Skin skin;
+	private Table urlTable;
+	private Table progressTable;
 
 	public GdxQuake2(PlatformTools tools) {
 		GdxQuake2.tools = tools;
@@ -65,45 +64,52 @@ public class GdxQuake2 extends ApplicationAdapter {
 		if (state.getBoolean(DOWNLOAD_COMPLETE, false)) {
 			initGame();
 		} else {
+			skin = new Skin(Gdx.files.internal("uiskin.json"));
+			installationStage = new Stage();
+			Gdx.input.setInputProcessor(installationStage);
 			showInstaller();
 		}
 	}
 
 	void initError(String msg, Throwable cause) {
-		if (progressTracker != null) {
-			progressTracker.action = "Error";
-			progressTracker.file = msg;
-			progressTracker.callback.run();
-		}
+		Dialog errorDialog = new Dialog("Error", skin) {
+			protected void result(Object object) {
+				progressTable.remove();
+				showInstaller();
+			}
+		};
+		errorDialog.text(msg + ":\n" + cause.getMessage());
+		errorDialog.button("Back");
+		errorDialog.show(installationStage);
 	}
 
 
 
 	public void showInstaller() {
-		skin = new Skin(Gdx.files.internal("uiskin.json"));
-		installationStage = new Stage();
-		Gdx.input.setInputProcessor(installationStage);
-
-		final Table table = new Table(skin);
-		table.setFillParent(true);
-		table.add("Quake II libGDX Port Installer");
-		table.row();
-		table.add(" ");
-		table.row();
-		table.add("Download assets from:");
-		table.row();
+		if (urlTable != null) {
+			installationStage.addActor(urlTable);
+			return;
+		}
+		urlTable = new Table(skin);
+		urlTable.setFillParent(true);
+		urlTable.add("Quake II libGDX Port Installer");
+		urlTable.row();
+		urlTable.add(" ");
+		urlTable.row();
+		urlTable.add("Download assets from:");
+		urlTable.row();
 		final TextField urlField = new TextField(
    				"http://commondatastorage.googleapis.com/quake2demo/q2-314-demo-x86.exe",
 				skin);
-		table.add(urlField).width(600);
-		table.row();
-		table.add(" ");
-		table.row();
+		urlTable.add(urlField).width(600);
+		urlTable.row();
+		urlTable.add(" ");
+		urlTable.row();
 		final TextButton button = new TextButton("Engage!", skin);
-		table.add(button);
-		table.row();
-		table.add(" ");
-		table.row();
+		urlTable.add(button);
+		urlTable.row();
+		urlTable.add(" ");
+		urlTable.row();
 		//fileLabel = new Label("(Waiting for user confirmation)", skin);
 		//table.add(fileLabel).expandX();
 		button.addListener(new EventListener() {
@@ -113,7 +119,8 @@ public class GdxQuake2 extends ApplicationAdapter {
 					String url = urlField.getText();
 					// showInitStatus("(Initiating download...)");
 
-					table.remove();
+					urlTable.remove();
+
 					showProgressScreen();
 					progressTracker = new ProgressTracker(new Runnable() {
 						public void run() {
@@ -146,33 +153,37 @@ public class GdxQuake2 extends ApplicationAdapter {
 				return true;
 			}
 		});
-		installationStage.addActor(table);
+		installationStage.addActor(urlTable);
 	}
 
 	public void showProgressScreen() {
-		final Table table = new Table(skin);
-		table.setFillParent(true);
-		table.add("Quake II libGDX Port Installation Progress").center().colspan(2);
-		table.row();
-		table.add(" ");
-		table.row();
+		if (progressTable != null) {
+			installationStage.addActor(progressTable);
+			return;
+		}
+		progressTable = new Table(skin);
+		progressTable.setFillParent(true);
+		progressTable.add("Quake II libGDX Port Installation Progress").center().colspan(2);
+		progressTable.row();
+		progressTable.add(" ");
+		progressTable.row();
 
-		table.add("Action: ").right();
+		progressTable.add("Action: ").right();
 		actionLabel = new Label("Waiting for Connection", skin);
-		table.add(actionLabel).expandX().left();
-		table.row();
+		progressTable.add(actionLabel).expandX().left();
+		progressTable.row();
 
-		table.add("File: ").right();
+		progressTable.add("File: ").right();
 		fileLabel = new Label("", skin);
-		table.add(fileLabel).expandX().left();
-		table.row();
+		progressTable.add(fileLabel).expandX().left();
+		progressTable.row();
 
-		table.add("Processed: ").right();
+		progressTable.add("Processed: ").right();
 		progressLabel = new Label("N/A", skin);
-		table.add(progressLabel).expandX().left();
-		table.row();
+		progressTable.add(progressLabel).expandX().left();
+		progressTable.row();
 
-		installationStage.addActor(table);
+		installationStage.addActor(progressTable);
 	}
 
 	public static Dimension getImageSize(String name) {

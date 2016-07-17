@@ -20,7 +20,7 @@ public class UnZip implements Runnable {
     private JsArray zipEntries;
     private int zipIndex;
 
-    // Hack to avoid JSNI ultra-long parameter specification for
+    // Hack to avoid JSNI ultra-long parameter specification
     private ByteBuffer currentBuffer;
 
     public UnZip(String url, Callback<ZipEntry> dataCallback, Callback<Void> doneCallback, ProgressTracker progressTracker) {
