@@ -99,15 +99,11 @@ public class GdxALAdapter extends ALAdapter {
       this.location = location;
       sound = null;
 
-      GdxQuake2.tools.log(">>> BufferData ctor for " + location);
-
       GdxQuake2.asyncLocalStorage.getFileHandle(location.toLowerCase(), new Callback<AsyncFileHandle>() {
         @Override
         public void onSuccess(AsyncFileHandle fileHandle) {
           try {
-            GdxQuake2.tools.log(">>> BufferData ctor -- newMusic for " + location);
             sound = Gdx.audio.newMusic(fileHandle); //GdxQuake2.tools.decodeWav(data);
-            GdxQuake2.tools.log("<<< BufferData ctor -- newMusic for " + location);
           } catch (Exception e) {
             GdxQuake2.tools.log("newMusic failed for '" + location + "' cause: " + e);
           }
@@ -116,11 +112,8 @@ public class GdxALAdapter extends ALAdapter {
         @Override
         public void onFailure(Throwable cause) {
           GdxQuake2.tools.log("GdxAlAdapter failed to load '" + location + "' cause: " + cause);
-
         }
       });
-
-      GdxQuake2.tools.log("<<< BufferData ctor for " + location);
     }
   }
 
@@ -136,9 +129,7 @@ public class GdxALAdapter extends ALAdapter {
 
   @Override
   public void alBufferData(int buffer, String soundUrl) {
-    GdxQuake2.tools.log(">>>>> alBufferData: " + soundUrl);
     bufferData.put(buffer, new BufferData(soundUrl));
-    GdxQuake2.tools.log("<<<<< alBufferData: " + soundUrl);
   }
 
   @Override

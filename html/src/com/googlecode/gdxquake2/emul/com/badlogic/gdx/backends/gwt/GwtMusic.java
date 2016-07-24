@@ -42,18 +42,12 @@ public class GwtMusic implements Music, SMSoundCallback {
 	private OnCompletionListener onCompletionListener;
 
 	public GwtMusic (FileHandle file) {
-		GdxQuake2.tools.log("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXxx GwtMusic ctor");
 		String url;
 		if (file.type() == Files.FileType.Internal && !(file instanceof AsyncFileHandle)) {
-			GdxQuake2.tools.log("bad path");
 			url = ((GwtApplication) Gdx.app).getBaseUrl() + file.path();
-			GdxQuake2.tools.log("bad path url: " + url);
 		} else {
-			GdxQuake2.tools.log("Good path!");
 			byte[] data = file.readBytes();
-			GdxQuake2.tools.log("Good path. Received " + data.length + " bytes.");
 			char[] encodedChars = Base64Coder.encode(data);
-			GdxQuake2.tools.log("encoded to " + encodedChars.length + " chars.");
 
 			// WTF, GWT?
 			JsArrayString parts = (JsArrayString) JsArrayString.createArray();
@@ -63,14 +57,9 @@ public class GwtMusic implements Music, SMSoundCallback {
 				parts.push(part);
 			}
 			url = parts.join("");
-
-			GdxQuake2.tools.log("data url length: " + url.length());
 		}
-		GdxQuake2.tools.log("calling createSound");
 		sound = SoundManager.createSound(url);
-		GdxQuake2.tools.log("obtaining sound options");
 		soundOptions = new SMSoundOptions();
-		GdxQuake2.tools.log("setting callback");
 		soundOptions.callback = this;
 	}
 

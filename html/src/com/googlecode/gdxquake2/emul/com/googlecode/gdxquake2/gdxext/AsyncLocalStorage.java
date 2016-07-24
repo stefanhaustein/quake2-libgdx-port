@@ -49,7 +49,6 @@ public class AsyncLocalStorage {
   }
 
   void saveFileHandleImpl(final AsyncFileHandle fileHandle, final Callback<Void> readyCallback) {
-    GdxQuake2.tools.log("saveFileHandle: " + fileHandle.path);
     if (db != null) {
       ByteBuffer data = fileHandle.data;
       if (!(data instanceof HasArrayBufferView)) {
@@ -61,7 +60,6 @@ public class AsyncLocalStorage {
       saveFileImpl(fileHandle.path(), arrayBuffer, new Runnable() {
         @Override
         public void run() {
-          GdxQuake2.tools.log("Actually seem to have managed to save file: " + fileHandle.path());
           readyCallback.onSuccess(null);
         }
       });
@@ -91,13 +89,10 @@ public class AsyncLocalStorage {
   }-*/;
 
   public void getFileHandle(final String path, final Callback<AsyncFileHandle> callback) {
-    GdxQuake2.tools.log("getFileHandle: " + path);
     if (db != null) {
-      GdxQuake2.tools.log("db != null, calling impl");
       getFileHandleImpl(path, new Callback<Int8Array>() {
         @Override
         public void onSuccess(Int8Array result) {
-          GdxQuake2.tools.log("getFileHandle.onSuccess for " + path);
           // TODO(haustein): Add a way to wrap an ArrayBuffer w/o copy.
           ByteBuffer buffer = BufferUtils.newByteBuffer(result.length()); // ByteBuffer.wrap(result.buffer()); // BufferUtils.newByteBuffer(result.byteLength());
 
@@ -118,10 +113,8 @@ public class AsyncLocalStorage {
         }
       });
     } else if (error) {
-      GdxQuake2.tools.log("db error");
       callback.onFailure(new IOException("Database intialization failure"));
     } else {
-      GdxQuake2.tools.log("db == null, posting for later");
       Gdx.app.postRunnable(new Runnable() {
         @Override
         public void run() {
@@ -140,7 +133,6 @@ public class AsyncLocalStorage {
     $wnd.console.log("getFileHandleImpl get() was called " + path);
     trans.oncomplete = function(event) {
        var result = request.result;
-       $wnd.console.log("getFileHandleImpl callback success for " + path + " result: ", result);
        if (result != null) {
          callback.@com.googlecode.gdxquake2.gdxext.Callback::onSuccess(Ljava/lang/Object;)(result);
        } else {

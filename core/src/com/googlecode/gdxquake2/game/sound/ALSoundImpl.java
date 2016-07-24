@@ -135,8 +135,6 @@ public class ALSoundImpl implements SoundImpl {
       LoadSound(sfx);
     }
 
-    GdxQuake2.tools.log("END REGISTRATION END, setting s_registering to false");
-
     s_registering = false;
   }
 
@@ -237,15 +235,11 @@ public class ALSoundImpl implements SoundImpl {
       s.cache = sc;
       Console.Print("Creating audio element " + namebuffer + "\r");
 
-      GdxQuake2.tools.log("-- Creating audio element: " + namebuffer);
-
       sc.soundUrl = /*"baseq2/" + */namebuffer;
       initBuffer(sc.soundUrl, sc.data, s.bufferId, sc.speed);
       s.isCached = true;
       // free samples for GC
       s.cache.data = null;
-
-      GdxQuake2.tools.log("-- Created audio element: " + namebuffer);
     }
 
     return sc;

@@ -175,9 +175,7 @@ public class GlRenderer implements Renderer {
 
   @Override
   public final void BeginRegistration(String map, Runnable callback) {
-    GdxQuake2.tools.log(">>> beginRegistration");
     Models.R_BeginRegistration(map, callback);
-    GdxQuake2.tools.log("<<< beginRegistration");
   }
 
   @Override
@@ -822,7 +820,6 @@ public class GlRenderer implements Renderer {
     for (int i = pendingImages.size() - 1; i >= 0; i--) {
       Image image = pendingImages.get(i);
       if (image.ready) {
-        GdxQuake2.tools.log("Image ready: " + image);
         uploadImage(image);
         pendingImages.remove(i);
       }
@@ -857,7 +854,6 @@ public class GlRenderer implements Renderer {
 
     Images.GL_Bind(image.texnum);
     if (image.type == com.googlecode.gdxquake2.game.common.QuakeImage.it_pic) {
-      GdxQuake2.tools.log("upload non-mipmap image " + image.name + ":" + image.width + "x" + image.height);
       GlState.gl.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_CLAMP_TO_EDGE);
       GlState.gl.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_CLAMP_TO_EDGE);
       GlState.gl.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
@@ -866,7 +862,6 @@ public class GlRenderer implements Renderer {
       image.upload_width = image.width;
       image.upload_height = image.height;
     } else if (image.type == com.googlecode.gdxquake2.game.common.QuakeImage.it_sky) {
-      GdxQuake2.tools.log("upload sky image " + image.name + ":" + image.width + "x" + image.height);
       GlState.gl.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_CLAMP_TO_EDGE);
       GlState.gl.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_CLAMP_TO_EDGE);
       GlState.gl.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
@@ -880,7 +875,6 @@ public class GlRenderer implements Renderer {
       Images.skyTarget.upload_height = image.height;
       texSubImage2D(image.pixmap,  GL20.GL_TEXTURE_2D, 0, image.width * image.skyIndex, 0, GL20.GL_RGBA, GL20.GL_UNSIGNED_BYTE);
     } else {
-      GdxQuake2.tools.log("upload mipmap image " + image.name + ":" + image.width + "x" + image.height);
       GlState.gl.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_REPEAT);
       GlState.gl.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_REPEAT);
       GlState.gl.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR_MIPMAP_LINEAR);
@@ -916,8 +910,6 @@ public class GlRenderer implements Renderer {
 
   @Override
   public Image GL_LoadNewImage(String name, int type) {
-    GdxQuake2.tools.log("GlRenderer.GL_LoadNewImage(" + name  + ", " + type + ")");
-    
     final Image image = Images.GL_Find_free_image_t(name, type);
 
     name = name.toLowerCase();
@@ -930,11 +922,9 @@ public class GlRenderer implements Renderer {
     }
     d = GdxQuake2.getImageSize(name);
     if (d == null) {
-      GdxQuake2.tools.log("*** Size not found for " + name);
         image.width = 128;
         image.height = 128;
     } else {
-      GdxQuake2.tools.log("Size: " + d);
         image.width = d.width;
         image.height = d.height;
     }
@@ -948,11 +938,9 @@ public class GlRenderer implements Renderer {
     GdxQuake2.asyncLocalStorage.getFileHandle(name.toLowerCase() + ".png", new Callback<AsyncFileHandle>() {
       @Override
       public void onSuccess(AsyncFileHandle result) {
-        GdxQuake2.tools.log("Successfully loaded " + image.name.toLowerCase() + " calling loadPixmap.");
         AsyncPixmapLoader.loadPixmap(result, new Callback<Pixmap>() {
                   @Override
                   public void onSuccess(Pixmap pixmap) {
-                    GdxQuake2.tools.log("Successfully loaded pixmap for " + image.name.toLowerCase() + ": " + pixmap.getWidth() + "x" + pixmap.getHeight());
                     // Image was recycled in the meantime.
                     if (image.loadId != loadId) {
                       return;

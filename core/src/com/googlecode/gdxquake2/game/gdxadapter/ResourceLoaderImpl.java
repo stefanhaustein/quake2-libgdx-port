@@ -34,23 +34,16 @@ public class ResourceLoaderImpl implements ResourceLoader.Impl {
   int delay;
 
   public boolean pump() {
-    if ((delay++ % 100) == 0) {
-      GdxQuake2.tools.log("Missing: " + missing);
-    }
-
     return missing > 0;
   }
 
   public void reset() {
-    GdxQuake2.tools.log("Resource loader reset: " + missing);
   }
   
   public void loadResourceAsync(final String rawPath, final ResourceLoader.Callback callback) {
     missing++;
     
     final String path = rawPath.toLowerCase();
-    GdxQuake2.tools.log("Requesting resource: " + path);
-
     GdxQuake2.asyncLocalStorage.getFileHandle(path, new Callback<AsyncFileHandle>() {
 
       @Override

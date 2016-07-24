@@ -1294,15 +1294,9 @@ public final class GL11Emulation implements GL11 {
 
   @Override
   public void glGenBuffers(int n, int[] buffers, int offset) {
-
-    GdxQuake2.tools.log(">>> Gl11.glGenBuffers");
-
     IntBuffer intBuffer = BufferUtils.newIntBuffer(n);
     gl.glGenBuffers(n, intBuffer);
     intBuffer.get(buffers, offset, n);
-
-    GdxQuake2.tools.log("<<< Gl11.glGenBuffers");
-
   }
 
   @Override

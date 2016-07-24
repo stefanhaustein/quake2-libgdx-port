@@ -721,17 +721,11 @@ if (data instanceof FloatBuffer) {
 
 	@Override
 	public void glGenBuffers (int n, IntBuffer buffers) {
-
-		GdxQuake2.tools.log(">>> Gl20.glGenBuffers(" + n + ", " + buffers);
-
 		for (int i = 0; i < n; i++) {
 			WebGLBuffer buffer = gl.createBuffer();
 			int id = this.buffers.add(buffer);
 			buffers.put(buffers.position() + i, id);
 		}
-
-		GdxQuake2.tools.log("<<< Gl20.glGenBuffers(" + n + ", " + buffers);
-
 	}
 
 	@Override

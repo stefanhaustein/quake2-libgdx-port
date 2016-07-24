@@ -92,15 +92,12 @@ public class UnZip implements Runnable {
     }-*/;
 
     private Uint8Array createBuffer(int size) {
-        GdxQuake2.tools.log("createbuffer " + size);
         currentBuffer = BufferUtils.newByteBuffer(size);
         return (Uint8Array) ((HasArrayBufferView) currentBuffer).getTypedArray();
     }
 
     private void entryAvailable(String name) {
-        GdxQuake2.tools.log("entryAvailable " + name + "; calling onsuccess");
         dataCallback.onSuccess(new ZipEntry(name, currentBuffer));
-        GdxQuake2.tools.log("back from onSuccess");
         currentBuffer = null;
         postSelf();
     }

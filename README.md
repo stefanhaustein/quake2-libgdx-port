@@ -2,32 +2,36 @@
 
 This is a fork of quake2-playn-port and still work in progress.
 
-Goals:
+## Goals
 
  - Become familiar with libgdx
  - Fix web sound
  - Make sure the web version works with all modern browsers
  - Make the code run on Android
 
-Status: 
+## Status
 
+ - 2016-07-24: Lots of logspam removed
+ - 2016-07-20: Installation error recovery
  - 2016-07-12: Web and Desktop should basically work with sound now.
  - 2016-06-12: Web download, decompression and conversion works.
  - 2016-06-11: Desktop version basically works (incl. libGDX scene2d "installer" UI) 
  - 2016-06-10: Desktop file donwload, extraction and conversion seems to work.
 
-TODO:
+## TODO for Relaunch
 
- - Offer to provide a new URL on load errors without a page reload.
- - Remove log spam
- - Mouse support
- - Fullscreen
- - Better default window size
+ - Mouse support (incl. grab?)
+ - Window resizing / fullscreen (+ better default window size?)
+
+## TODO for Additional Platform Support
+
  - Firefox errors
  - Androd unzip problems
  - Port improvements back to libGDX
 
-Demo of the old playn version: http://quake2playn.appspot.com/ 
+## Old Versions
+
+Demo of the old playn version: http://quake2playn.appspot.com/
 
 - If you visit the demo with `https:`, you'll need to change the download link in the input field from `http:` to `https:`, too, as pointed out in issue #1. Ill fix this when I get a chance.
 
